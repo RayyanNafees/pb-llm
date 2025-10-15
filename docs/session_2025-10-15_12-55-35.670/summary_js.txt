@@ -1,0 +1,103 @@
+================================================================================
+POCKETBASE DOCUMENTATION SCRAPING SUMMARY FOR LLM USAGE
+================================================================================
+Generated: 2025-10-15 12:55:35
+Total Sections: 39
+Purpose: LLM Training & Context Enhancement
+
+🤖 LLM USAGE STATISTICS
+================================================================================
+📊 Total Estimated Tokens: 56,397
+🔧 LLM-Ready Tokens: 62,492
+📈 Avg Tokens/Section: 1,602
+📖 Context Window Usage: ~1525.7% (assuming 4k context)
+🎯 Compression Ratio: 110.8% (clean vs raw)
+
+📊 PROCESSING STATISTICS
+================================================================================
+✅ Successful: 39/39 sections (100.0%)
+❌ Failed: 0/39 sections (0.0%)
+
+📈 CONTENT INSIGHTS
+================================================================================
+📄 Largest Section: Web APIs reference - API Records (10,831 tokens, 55,241 chars)
+📄 Smallest Section: Extend with JavaScript - Console commands (117 tokens, 698 chars)
+
+📂 CONTENT BY CATEGORY (with Token Analysis)
+================================================================================
+   Api: 10 sections, 29,291 tokens (46.9%), avg 2,929 tokens/section
+   Hooks: 18 sections, 21,763 tokens (34.8%), avg 1,209 tokens/section
+   Database: 2 sections, 2,622 tokens (4.2%), avg 1,311 tokens/section
+   General: 4 sections, 2,469 tokens (4.0%), avg 617 tokens/section
+   Auth: 1 sections, 2,329 tokens (3.7%), avg 2,329 tokens/section
+   Setup: 2 sections, 1,803 tokens (2.9%), avg 901 tokens/section
+   Files: 1 sections, 1,246 tokens (2.0%), avg 1,246 tokens/section
+   Sdk: 1 sections, 969 tokens (1.6%), avg 969 tokens/section
+
+📊 LEGACY STATISTICS
+================================================================================
+📝 Total content: 321,588 characters
+🔧 Total parameters: 156
+
+🌐 API METHODS FOUND
+================================================================================
+   GET: 2 endpoints
+   POST: 1 endpoints
+
+✅ SUCCESSFUL SECTIONS
+================================================================================
+[1] Introduction (259 tokens, 1726 chars, 0 params)
+[2] How to use PocketBase (1,209 tokens, 8058 chars, 0 params)
+[3] pb-ext - Enhanced PocketBase Server (538 tokens, 2655 chars, 0 params)
+[4] pb-ext - Scripts Documentation (463 tokens, 3249 chars, 0 params)
+[5] pb-ext - Collections Implementation (395 tokens, 2547 chars, 0 params)
+[6] pb-ext - Handlers Implementation (1,913 tokens, 10925 chars, 0 params)
+[7] pb-ext - Jobs Implementation (1,078 tokens, 6490 chars, 0 params)
+[8] pb-ext - Routes Implementation (433 tokens, 2744 chars, 0 params)
+[9] Going to production (1,315 tokens, 8569 chars, 0 params)
+[10] pb-deployer - PocketBase Production Deployment (488 tokens, 2626 chars, 0 params)
+[11] Introduction - Collections (1,532 tokens, 9363 chars, 0 params)
+[12] Introduction - API rules and filters (1,573 tokens, 9704 chars, 0 params)
+[13] Introduction - Working with relations (1,090 tokens, 5911 chars, 0 params)
+[14] Introduction - Authentication (2,329 tokens, 14233 chars, 0 params)
+[15] Introduction - Files upload and handling (1,246 tokens, 7422 chars, 0 params)
+[16] Web APIs reference - API Collections (6,892 tokens, 32086 chars, 15 params)
+[17] Web APIs reference - API Records (10,831 tokens, 39850 chars, 68 params)
+[18] Web APIs reference - API Realtime (787 tokens, 3765 chars, 2 params)
+[19] Web APIs reference - API Files (734 tokens, 1866 chars, 6 params)
+[20] Web APIs reference - API Crons (526 tokens, 2009 chars, 2 params)
+[21] Web APIs reference - API Settings (3,464 tokens, 11205 chars, 46 params)
+[22] Web APIs reference - API Logs (3,125 tokens, 8663 chars, 9 params)
+[23] Web APIs reference - API Health (263 tokens, 644 chars, 1 params)
+[24] Web APIs reference - API Backups (1,096 tokens, 4897 chars, 7 params)
+[25] Extend with JavaScript - Overview (969 tokens, 6170 chars, 0 params)
+[26] Extend with JavaScript - Overview (969 tokens, 6170 chars, 0 params)
+[27] Extend with JavaScript - Event hooks (7,093 tokens, 50043 chars, 0 params)
+[28] Extend with JavaScript - Routing (2,183 tokens, 13256 chars, 0 params)
+[29] Extend with JavaScript - Database (2,044 tokens, 10835 chars, 0 params)
+[30] Extend with JavaScript - Record operations (2,083 tokens, 13157 chars, 0 params)
+[31] Extend with JavaScript - Collection operations (536 tokens, 3324 chars, 0 params)
+[32] Extend with JavaScript - Migrations (776 tokens, 5209 chars, 0 params)
+[33] Extend with JavaScript - Jobs scheduling (162 tokens, 796 chars, 0 params)
+[34] Extend with JavaScript - Sending emails (251 tokens, 1413 chars, 0 params)
+[35] Extend with JavaScript - Rendering templates (364 tokens, 1760 chars, 0 params)
+[36] Extend with JavaScript - Console commands (117 tokens, 535 chars, 0 params)
+[37] Extend with JavaScript - Realtime messaging (250 tokens, 1447 chars, 0 params)
+[38] Extend with JavaScript - Filesystem (506 tokens, 3158 chars, 0 params)
+[39] Extend with JavaScript - Logging (610 tokens, 3108 chars, 0 params)
+
+🔧 CUSTOM PACKAGES INTEGRATED
+================================================================================
+✅ pb-ext - Enhanced PocketBase Server - https://raw.githubusercontent.com/magooney-loon/pb-ext/main/README.md
+✅ pb-ext - Scripts Documentation - https://raw.githubusercontent.com/magooney-loon/pb-ext/refs/heads/main/cmd/scripts/README.md
+✅ pb-ext - Collections Implementation - https://raw.githubusercontent.com/magooney-loon/pb-ext/refs/heads/main/cmd/server/collections.go
+✅ pb-ext - Handlers Implementation - https://raw.githubusercontent.com/magooney-loon/pb-ext/refs/heads/main/cmd/server/handlers.go
+✅ pb-ext - Jobs Implementation - https://raw.githubusercontent.com/magooney-loon/pb-ext/refs/heads/main/cmd/server/jobs.go
+✅ pb-ext - Routes Implementation - https://raw.githubusercontent.com/magooney-loon/pb-ext/refs/heads/main/cmd/server/routes.go
+✅ pb-deployer - PocketBase Production Deployment - https://raw.githubusercontent.com/magooney-loon/pb-deployer/main/README.md
+
+Total custom packages integrated: 7
+
+================================================================================
+END OF SUMMARY
+================================================================================

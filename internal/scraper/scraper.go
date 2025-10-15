@@ -100,14 +100,17 @@ func New() *Scraper {
 	}
 }
 
-func (s *Scraper) ScrapeAll() ([]types.DocSection, error) {
+func (s *Scraper) ScrapeAll(extensions string) ([]types.DocSection, error) {
+	// Filter sections based on extensions parameter
+	filteredSections := s.filterSectionsByExtensions(docSections, extensions)
+
 	fmt.Printf("🚀 Starting PocketBase documentation scraping...\n")
-	fmt.Printf("📝 Processing %d sections\n\n", len(docSections))
+	fmt.Printf("📝 Processing %d sections (filtered for %s extensions)\n\n", len(filteredSections), extensions)
 
 	var results []types.DocSection
 
-	for i, section := range docSections {
-		fmt.Printf("⏳ [%d/%d] Processing: %s\n", i+1, len(docSections), section.Title)
+	for i, section := range filteredSections {
+		fmt.Printf("⏳ [%d/%d] Processing: %s\n", i+1, len(filteredSections), section.Title)
 		fmt.Printf("🔗 URL: %s\n", section.URL)
 
 		processedSection, err := s.processSection(section)
@@ -126,6 +129,92 @@ func (s *Scraper) ScrapeAll() ([]types.DocSection, error) {
 	}
 
 	return results, nil
+}
+
+// filterSectionsByExtensions filters sections based on the extensions parameter
+func (s *Scraper) filterSectionsByExtensions(sections []types.DocSection, extensions string) []types.DocSection {
+	if extensions == "both" {
+		return sections
+	}
+
+	var filtered []types.DocSection
+
+	for _, section := range sections {
+		// For "none", only include core sections (non-extension related)
+		if extensions == "none" {
+			if !s.isExtensionSection(section) {
+				filtered = append(filtered, section)
+			}
+			continue
+		}
+
+		// Always include core sections (non-extension related)
+		if !s.isExtensionSection(section) {
+			filtered = append(filtered, section)
+			continue
+		}
+
+		// Filter based on extension type
+		if extensions == "go" && s.isGoSection(section) {
+			filtered = append(filtered, section)
+		} else if extensions == "js" && s.isJavaScriptSection(section) {
+			filtered = append(filtered, section)
+		}
+	}
+
+	return filtered
+}
+
+// isExtensionSection checks if a section is extension-related
+func (s *Scraper) isExtensionSection(section types.DocSection) bool {
+	return s.isGoSection(section) || s.isJavaScriptSection(section)
+}
+
+// isGoSection checks if a section is Go-related
+func (s *Scraper) isGoSection(section types.DocSection) bool {
+	return strings.HasPrefix(section.Title, "Go ") ||
+		strings.Contains(section.Title, "Extend with Go")
+}
+
+// isJavaScriptSection checks if a section is JavaScript-related
+func (s *Scraper) isJavaScriptSection(section types.DocSection) bool {
+	return strings.HasPrefix(section.Title, "JavaScript ") ||
+		strings.Contains(section.Title, "Extend with JavaScript") ||
+		section.Title == "JavaScript SDK"
+}
+
+// FilterDocsByExtensions filters already scraped documents by extension type (public method)
+func (s *Scraper) FilterDocsByExtensions(docs []types.DocSection, extensions string) []types.DocSection {
+	if extensions == "both" {
+		return docs
+	}
+
+	var filtered []types.DocSection
+
+	for _, doc := range docs {
+		// For "none", only include core sections (non-extension related)
+		if extensions == "none" {
+			if !s.isExtensionSection(types.DocSection{Title: doc.Title}) {
+				filtered = append(filtered, doc)
+			}
+			continue
+		}
+
+		// Always include core sections (non-extension related)
+		if !s.isExtensionSection(types.DocSection{Title: doc.Title}) {
+			filtered = append(filtered, doc)
+			continue
+		}
+
+		// Filter based on extension type
+		if extensions == "go" && s.isGoSection(types.DocSection{Title: doc.Title}) {
+			filtered = append(filtered, doc)
+		} else if extensions == "js" && s.isJavaScriptSection(types.DocSection{Title: doc.Title}) {
+			filtered = append(filtered, doc)
+		}
+	}
+
+	return filtered
 }
 
 func (s *Scraper) processSection(section types.DocSection) (types.DocSection, error) {
@@ -364,23 +453,31 @@ func (s *Scraper) extractTitle(content, fallbackTitle string) string {
 }
 
 func (s *Scraper) extractMainContent(content string) string {
-	var extractedContent strings.Builder
-
-	// Extract all text content from the main documentation area
-	// PocketBase docs are typically in a main content area or article
-
-	// Remove script and style tags first
+	// Remove scripts, styles, and other non-content elements first
 	content = s.removeScriptsAndStyles(content)
 
-	// Look for main content containers
+	// Remove navigation, sidebar, header, footer, and other UI elements
+	uiSelectors := []string{
+		`<nav[^>]*>.*?</nav>`,
+		`<header[^>]*>.*?</header>`,
+		`<footer[^>]*>.*?</footer>`,
+		`<aside[^>]*>.*?</aside>`,
+		`<div[^>]*class="[^"]*(?:nav|menu|sidebar|header|footer|breadcrumb)[^"]*"[^>]*>.*?</div>`,
+	}
+
+	for _, selector := range uiSelectors {
+		regex := regexp.MustCompile(`(?s)` + selector)
+		content = regex.ReplaceAllString(content, "")
+	}
+
+	// Find the main content area
+	var mainContent string
 	contentPatterns := []string{
 		`<main[^>]*>(.*?)</main>`,
 		`<article[^>]*>(.*?)</article>`,
-		`<div[^>]*class="[^"]*(?:content|main|docs|prose)[^"]*"[^>]*>(.*?)</div>`,
-		`<div[^>]*id="[^"]*(?:content|main|docs)[^"]*"[^>]*>(.*?)</div>`,
+		`<div[^>]*class="[^"]*(?:content|main|docs|prose|documentation)[^"]*"[^>]*>(.*?)</div>`,
 	}
 
-	var mainContent string
 	for _, pattern := range contentPatterns {
 		regex := regexp.MustCompile(`(?s)` + pattern)
 		if matches := regex.FindStringSubmatch(content); len(matches) > 1 {
@@ -389,7 +486,7 @@ func (s *Scraper) extractMainContent(content string) string {
 		}
 	}
 
-	// If no main container found, extract from body
+	// If no main container found, use body content
 	if mainContent == "" {
 		bodyRegex := regexp.MustCompile(`(?s)<body[^>]*>(.*?)</body>`)
 		if matches := bodyRegex.FindStringSubmatch(content); len(matches) > 1 {
@@ -399,40 +496,8 @@ func (s *Scraper) extractMainContent(content string) string {
 		}
 	}
 
-	// Extract text from common HTML elements
-	elements := []string{"h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "blockquote", "td", "th"}
-
-	for _, element := range elements {
-		pattern := fmt.Sprintf(`<%s[^>]*>(.*?)</%s>`, element, element)
-		regex := regexp.MustCompile(`(?s)` + pattern)
-		matches := regex.FindAllStringSubmatch(mainContent, -1)
-
-		for _, match := range matches {
-			if len(match) > 1 {
-				text := s.cleanText(match[1])
-				if len(text) > 10 { // Only include substantial text
-					extractedContent.WriteString(text)
-					extractedContent.WriteString("\n\n")
-				}
-			}
-		}
-	}
-
-	// Also extract plain text that might not be in standard tags
-	// Remove all HTML tags and extract remaining text
-	plainTextRegex := regexp.MustCompile(`>([^<]{20,})<`)
-	plainMatches := plainTextRegex.FindAllStringSubmatch(mainContent, -1)
-	for _, match := range plainMatches {
-		if len(match) > 1 {
-			text := s.cleanText(match[1])
-			if len(text) > 20 && !strings.Contains(strings.ToLower(text), "script") {
-				extractedContent.WriteString(text)
-				extractedContent.WriteString("\n")
-			}
-		}
-	}
-
-	return s.cleanText(extractedContent.String())
+	// Convert to clean markdown-like text
+	return s.htmlToCleanText(mainContent)
 }
 
 func (s *Scraper) removeScriptsAndStyles(content string) string {
@@ -741,38 +806,207 @@ func (s *Scraper) createCleanContent(section types.DocSection) string {
 }
 
 func (s *Scraper) cleanText(text string) string {
-	// Remove HTML entities
-	text = strings.ReplaceAll(text, "&amp;", "&")
-	text = strings.ReplaceAll(text, "&lt;", "<")
-	text = strings.ReplaceAll(text, "&gt;", ">")
-	text = strings.ReplaceAll(text, "&quot;", "\"")
-	text = strings.ReplaceAll(text, "&#39;", "'")
-	text = strings.ReplaceAll(text, "&nbsp;", " ")
-	text = strings.ReplaceAll(text, "&#x27;", "'")
-	text = strings.ReplaceAll(text, "&#x2F;", "/")
+	// Remove HTML entities - compact
+	replacements := map[string]string{
+		"&amp;":  "&",
+		"&lt;":   "<",
+		"&gt;":   ">",
+		"&quot;": "\"",
+		"&#39;":  "'",
+		"&nbsp;": " ",
+		"&#x27;": "'",
+		"&#x2F;": "/",
+	}
 
-	// Clean up whitespace
-	text = strings.ReplaceAll(text, "\n\n\n", "\n\n")
+	for old, new := range replacements {
+		text = strings.ReplaceAll(text, old, new)
+	}
+
+	// Ultra-compact whitespace cleanup
+	text = strings.ReplaceAll(text, "\n\n", "\n")
 	text = strings.ReplaceAll(text, "\t", " ")
-	text = strings.ReplaceAll(text, "\r", " ")
+	text = strings.ReplaceAll(text, "\r", "")
+	text = strings.ReplaceAll(text, "  ", " ")
 
-	// Split into lines and clean each line
+	// Single pass line cleaning
 	lines := strings.Split(text, "\n")
 	var cleaned []string
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line != "" && len(line) > 1 {
+		if len(line) > 1 {
 			cleaned = append(cleaned, line)
 		}
 	}
 
-	result := strings.Join(cleaned, "\n")
+	return strings.TrimSpace(strings.Join(cleaned, "\n"))
+}
+
+// htmlToCleanText converts HTML content to clean, readable text
+func (s *Scraper) htmlToCleanText(html string) string {
+	// Ultra-compact HTML processing for minimal tokens
+	content := html
+
+	// Convert headings - minimal format
+	headingPatterns := []struct {
+		pattern string
+		prefix  string
+	}{
+		{`<h1[^>]*>(.*?)</h1>`, "# "},
+		{`<h2[^>]*>(.*?)</h2>`, "## "},
+		{`<h3[^>]*>(.*?)</h3>`, "### "},
+		{`<h4[^>]*>(.*?)</h4>`, "#### "},
+		{`<h5[^>]*>(.*?)</h5>`, "##### "},
+		{`<h6[^>]*>(.*?)</h6>`, "###### "},
+	}
+
+	for _, hp := range headingPatterns {
+		regex := regexp.MustCompile(`(?s)` + hp.pattern)
+		content = regex.ReplaceAllStringFunc(content, func(match string) string {
+			submatch := regex.FindStringSubmatch(match)
+			if len(submatch) > 1 {
+				text := s.stripHTMLTags(submatch[1])
+				return hp.prefix + strings.TrimSpace(text) + "\n"
+			}
+			return match
+		})
+	}
+
+	// Convert paragraphs - no double newlines
+	pRegex := regexp.MustCompile(`(?s)<p[^>]*>(.*?)</p>`)
+	content = pRegex.ReplaceAllStringFunc(content, func(match string) string {
+		submatch := pRegex.FindStringSubmatch(match)
+		if len(submatch) > 1 {
+			text := s.stripHTMLTags(submatch[1])
+			text = strings.TrimSpace(text)
+			if len(text) > 3 {
+				return text + "\n"
+			}
+		}
+		return ""
+	})
+
+	// Convert list items - compact
+	liRegex := regexp.MustCompile(`(?s)<li[^>]*>(.*?)</li>`)
+	content = liRegex.ReplaceAllStringFunc(content, func(match string) string {
+		submatch := liRegex.FindStringSubmatch(match)
+		if len(submatch) > 1 {
+			text := s.stripHTMLTags(submatch[1])
+			text = strings.TrimSpace(text)
+			if len(text) > 2 {
+				return "-" + text + "\n"
+			}
+		}
+		return ""
+	})
+
+	// Convert code blocks - minimal format
+	codeBlockRegex := regexp.MustCompile(`(?s)<pre[^>]*><code[^>]*>(.*?)</code></pre>`)
+	content = codeBlockRegex.ReplaceAllStringFunc(content, func(match string) string {
+		submatch := codeBlockRegex.FindStringSubmatch(match)
+		if len(submatch) > 1 {
+			code := s.stripHTMLTags(submatch[1])
+			code = strings.ReplaceAll(code, "\n\n", "\n")
+			code = strings.ReplaceAll(code, "\t", " ")
+			if len(strings.TrimSpace(code)) > 3 {
+				return "```\n" + code + "\n```\n"
+			}
+		}
+		return ""
+	})
+
+	// Convert inline code - minimal
+	inlineCodeRegex := regexp.MustCompile(`<code[^>]*>(.*?)</code>`)
+	content = inlineCodeRegex.ReplaceAllStringFunc(content, func(match string) string {
+		submatch := inlineCodeRegex.FindStringSubmatch(match)
+		if len(submatch) > 1 {
+			code := s.stripHTMLTags(submatch[1])
+			code = strings.TrimSpace(code)
+			if len(code) > 0 {
+				return "`" + code + "`"
+			}
+		}
+		return ""
+	})
+
+	// Skip blockquotes for token efficiency
+	content = regexp.MustCompile(`(?s)<blockquote[^>]*>.*?</blockquote>`).ReplaceAllString(content, "")
+
+	// Remove all remaining HTML tags
+	content = s.stripHTMLTags(content)
+
+	// Ultra-compact cleanup
+	lines := strings.Split(content, "\n")
+	var cleanLines []string
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		lower := strings.ToLower(line)
+
+		// Skip noise and very short lines
+		if s.shouldSkipLine(lower) || len(line) < 3 {
+			continue
+		}
+
+		if line != "" {
+			cleanLines = append(cleanLines, line)
+		}
+	}
+
+	// Join with single newlines only
+	finalText := strings.Join(cleanLines, "\n")
 
 	// Remove excessive newlines
-	re := regexp.MustCompile(`\n{3,}`)
-	result = re.ReplaceAllString(result, "\n\n")
+	finalText = regexp.MustCompile(`\n{2,}`).ReplaceAllString(finalText, "\n")
 
-	return strings.TrimSpace(result)
+	return strings.TrimSpace(finalText)
+}
+
+// stripHTMLTags removes all HTML tags from text
+func (s *Scraper) stripHTMLTags(html string) string {
+	// Remove HTML tags
+	tagRegex := regexp.MustCompile(`<[^>]*>`)
+	return tagRegex.ReplaceAllString(html, "")
+}
+
+// shouldSkipLine determines if a line should be skipped as UI noise
+func (s *Scraper) shouldSkipLine(line string) bool {
+	// Expanded skip patterns for token efficiency
+	skipPatterns := []string{
+		"download", "for linux", "for windows", "for macos",
+		"click here", "read more", "see more", "learn more",
+		"edit this page", "improve this page", "feedback",
+		"github releases", "changelog", "previous", "next",
+		"table of contents", "on this page", "jump to",
+		".zip", ".tar.gz", "mb zip", "mb tar",
+		"http://127.0.0.1", "localhost:", "example.com",
+		"lorem ipsum", "placeholder", "todo", "fixme",
+		"copy to clipboard", "view source", "raw",
+		"breadcrumb", "navigation", "sidebar", "footer",
+	}
+
+	for _, pattern := range skipPatterns {
+		if strings.Contains(line, pattern) {
+			return true
+		}
+	}
+
+	// Skip decorative lines and mostly punctuation
+	if regexp.MustCompile(`^[=\-_*#]{2,}$`).MatchString(line) {
+		return true
+	}
+
+	// Skip lines with too much punctuation (UI noise)
+	if len(line) > 0 {
+		nonPunctCount := 0
+		for _, r := range line {
+			if !strings.ContainsRune(".,;:!?()[]{}\"'`-_=+*/#@$%^&|\\<>", r) {
+				nonPunctCount++
+			}
+		}
+		return float64(nonPunctCount)/float64(len(line)) < 0.25
+	}
+
+	return false
 }
 
 func (s *Scraper) cleanCode(code string) string {

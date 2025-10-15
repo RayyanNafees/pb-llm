@@ -28,109 +28,58 @@ func NewLLMFormatter() *LLMFormatter {
 func (f *LLMFormatter) FormatFull(docs []types.DocSection) ([]byte, error) {
 	var content strings.Builder
 
-	// Header with metadata for LLMs
-	content.WriteString("# POCKETBASE DOCUMENTATION - LLM TRAINING DATASET\n\n")
-	content.WriteString("## DATASET METADATA\n")
-	content.WriteString(fmt.Sprintf("- Generated: %s\n", time.Now().Format("2006-01-02 15:04:05")))
-	content.WriteString(fmt.Sprintf("- Total Sections: %d\n", len(docs)))
-	content.WriteString("- Format: Structured for AI/LLM consumption\n")
-	content.WriteString("- Source: PocketBase Official Documentation\n")
-	content.WriteString("- Purpose: Backend-as-a-Service knowledge base\n\n")
+	// Minimal header
+	content.WriteString(fmt.Sprintf("# POCKETBASE DOCS|%s|%d sections\n", time.Now().Format("2006-01-02"), len(docs)))
 
-	// Quick reference index
-	content.WriteString("## DOCUMENTATION INDEX\n")
-	categoryMap := make(map[string][]string)
-	for _, doc := range docs {
-		if doc.Success {
-			category := strings.Title(doc.Category)
-			categoryMap[category] = append(categoryMap[category], doc.Title)
-		}
-	}
-
-	for category, titles := range categoryMap {
-		content.WriteString(fmt.Sprintf("### %s (%d sections)\n", category, len(titles)))
-		for _, title := range titles {
-			content.WriteString(fmt.Sprintf("- %s\n", title))
-		}
-		content.WriteString("\n")
-	}
-
-	content.WriteString("---\n\n")
-
-	// Main content structured for LLM consumption
+	// Ultra-compact sections - no whitespace waste
 	for i, doc := range docs {
 		if !doc.Success {
 			continue
 		}
 
-		tokenStats := f.tokenEstimator.EstimateDocTokens(doc)
-
-		content.WriteString(fmt.Sprintf("## SECTION %d: %s\n\n", i+1, doc.Title))
-
-		// Structured metadata
-		content.WriteString("**METADATA:**\n")
-		content.WriteString(fmt.Sprintf("- URL: %s\n", doc.URL))
-		content.WriteString(fmt.Sprintf("- Category: %s\n", doc.Category))
-		content.WriteString(fmt.Sprintf("- Estimated Tokens: %d\n", tokenStats.LLMUsable))
+		content.WriteString(fmt.Sprintf("\n## %d.%s\n", i+1, doc.Title))
 
 		if doc.APIRoute != "" && doc.Method != "" {
-			content.WriteString(fmt.Sprintf("- API Endpoint: `%s %s`\n", doc.Method, doc.APIRoute))
+			content.WriteString(fmt.Sprintf("%s %s\n", doc.Method, doc.APIRoute))
 		}
 
-		if doc.Description != "" {
-			content.WriteString(fmt.Sprintf("- Description: %s\n", doc.Description))
-		}
-		content.WriteString("\n")
-
-		// Parameters in structured format
 		if len(doc.Parameters) > 0 {
-			content.WriteString("**PARAMETERS:**\n")
 			for _, param := range doc.Parameters {
-				required := ""
+				req := ""
 				if param.Required {
-					required = " [REQUIRED]"
+					req = "*"
 				}
-				content.WriteString(fmt.Sprintf("- `%s` (%s)%s: %s\n", param.Name, param.Type, required, param.Description))
+				content.WriteString(fmt.Sprintf("%s%s(%s):%s\n", param.Name, req, param.Type, param.Description))
 			}
-			content.WriteString("\n")
 		}
 
-		// Code examples optimized for LLMs
 		if len(doc.Examples) > 0 {
-			content.WriteString("**CODE EXAMPLES:**\n")
 			for key, example := range doc.Examples {
 				lang, _, _ := strings.Cut(key, "_")
-				content.WriteString(fmt.Sprintf("```%s\n// %s Example for %s\n%s\n```\n\n", lang, strings.Title(lang), doc.Title, example))
+				// Remove extra whitespace from examples
+				cleanExample := strings.ReplaceAll(example, "\n\n", "\n")
+				cleanExample = strings.ReplaceAll(cleanExample, "\t", " ")
+				cleanExample = strings.TrimSpace(cleanExample)
+				content.WriteString(fmt.Sprintf("```%s\n%s\n```\n", lang, cleanExample))
 			}
 		}
 
-		// Response examples
 		if len(doc.ResponseExamples) > 0 {
-			content.WriteString("**API RESPONSES:**\n")
 			for _, resp := range doc.ResponseExamples {
-				content.WriteString(fmt.Sprintf("HTTP %d - %s:\n```json\n%s\n```\n\n", resp.StatusCode, resp.Description, resp.Body))
+				// Minimize JSON whitespace
+				cleanBody := strings.ReplaceAll(resp.Body, "\n  ", "\n")
+				cleanBody = strings.ReplaceAll(cleanBody, "  ", " ")
+				content.WriteString(fmt.Sprintf("HTTP%d:```json\n%s\n```\n", resp.StatusCode, cleanBody))
 			}
 		}
 
-		// Main content with clear boundaries
-		content.WriteString("**DOCUMENTATION CONTENT:**\n")
-		content.WriteString("```markdown\n")
-		content.WriteString(doc.CleanContent)
-		content.WriteString("\n```\n\n")
-
-		content.WriteString("---\n\n")
+		// Ultra-compact content - remove excessive newlines
+		cleanContent := strings.ReplaceAll(doc.CleanContent, "\n\n\n", "\n")
+		cleanContent = strings.ReplaceAll(cleanContent, "\n\n", "\n")
+		cleanContent = strings.TrimSpace(cleanContent)
+		content.WriteString(cleanContent)
+		content.WriteString("\n")
 	}
-
-	// Footer with usage instructions
-	content.WriteString("## LLM USAGE INSTRUCTIONS\n\n")
-	content.WriteString("This dataset contains comprehensive PocketBase documentation structured for AI consumption.\n")
-	content.WriteString("Each section includes:\n")
-	content.WriteString("- Structured metadata for context\n")
-	content.WriteString("- API parameters and examples\n")
-	content.WriteString("- Clean documentation content\n")
-	content.WriteString("- Token estimates for processing\n\n")
-	content.WriteString("Use this data to answer questions about PocketBase, generate code examples, ")
-	content.WriteString("or provide implementation guidance for backend development.\n")
 
 	return []byte(content.String()), nil
 }
@@ -408,7 +357,6 @@ func (f *TextFormatter) FormatSimplified(docs []types.DocSection) ([]byte, error
 	return []byte(content.String()), nil
 }
 
-// GetFormatter returns appropriate formatter based on format string
 func GetFormatter(format string) Formatter {
 	switch strings.ToLower(format) {
 	case "md", "markdown":

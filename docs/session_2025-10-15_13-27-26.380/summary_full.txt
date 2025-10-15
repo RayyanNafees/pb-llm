@@ -1,17 +1,18 @@
 ================================================================================
 POCKETBASE DOCUMENTATION SCRAPING SUMMARY FOR LLM USAGE
 ================================================================================
-Generated: 2025-10-15 12:55:35
+Generated: 2025-10-15 13:27:26
 Total Sections: 56
 Purpose: LLM Training & Context Enhancement
 
 🤖 LLM USAGE STATISTICS
 ================================================================================
-📊 Total Estimated Tokens: 81,907
-🔧 LLM-Ready Tokens: 88,340
-📈 Avg Tokens/Section: 1,577
-📖 Context Window Usage: ~2156.7% (assuming 4k context)
-🎯 Compression Ratio: 107.9% (clean vs raw)
+📊 Total Estimated Tokens: 87,341
+🔧 LLM-Ready Tokens: 93,779
+📈 Avg Tokens/Section: 1,674
+📖 Context Window Usage (120K): ~78.1%
+📖 Context Window Usage (200K): ~46.9%
+🎯 Compression Ratio: 107.4% (clean vs raw)
 
 📊 PROCESSING STATISTICS
 ================================================================================
@@ -20,23 +21,23 @@ Purpose: LLM Training & Context Enhancement
 
 📈 CONTENT INSIGHTS
 ================================================================================
-📄 Largest Section: Extend with Go - Event hooks (11,272 tokens, 74,211 chars)
+📄 Largest Section: Extend with Go - Event hooks (12,020 tokens, 78,013 chars)
 📄 Smallest Section: Extend with JavaScript - Console commands (117 tokens, 698 chars)
 
 📂 CONTENT BY CATEGORY (with Token Analysis)
 ================================================================================
-   Hooks: 35 sections, 47,611 tokens (53.9%), avg 1,360 tokens/section
-   Api: 10 sections, 29,291 tokens (33.2%), avg 2,929 tokens/section
-   Database: 2 sections, 2,622 tokens (3.0%), avg 1,311 tokens/section
-   General: 4 sections, 2,469 tokens (2.8%), avg 617 tokens/section
-   Auth: 1 sections, 2,329 tokens (2.6%), avg 2,329 tokens/section
-   Setup: 2 sections, 1,803 tokens (2.0%), avg 901 tokens/section
-   Files: 1 sections, 1,246 tokens (1.4%), avg 1,246 tokens/section
-   Sdk: 1 sections, 969 tokens (1.1%), avg 969 tokens/section
+   Hooks: 35 sections, 49,584 tokens (52.9%), avg 1,416 tokens/section
+   Api: 10 sections, 31,811 tokens (33.9%), avg 3,181 tokens/section
+   Database: 2 sections, 2,731 tokens (2.9%), avg 1,365 tokens/section
+   Auth: 1 sections, 2,710 tokens (2.9%), avg 2,710 tokens/section
+   General: 4 sections, 2,620 tokens (2.8%), avg 655 tokens/section
+   Setup: 2 sections, 1,835 tokens (2.0%), avg 917 tokens/section
+   Files: 1 sections, 1,500 tokens (1.6%), avg 1,500 tokens/section
+   Sdk: 1 sections, 988 tokens (1.1%), avg 988 tokens/section
 
 📊 LEGACY STATISTICS
 ================================================================================
-📝 Total content: 481,761 characters
+📝 Total content: 507,599 characters
 🔧 Total parameters: 156
 
 🌐 API METHODS FOUND
@@ -46,62 +47,62 @@ Purpose: LLM Training & Context Enhancement
 
 ✅ SUCCESSFUL SECTIONS
 ================================================================================
-[1] Introduction (259 tokens, 1726 chars, 0 params)
-[2] How to use PocketBase (1,209 tokens, 8058 chars, 0 params)
+[1] Introduction (292 tokens, 1834 chars, 0 params)
+[2] How to use PocketBase (1,327 tokens, 8718 chars, 0 params)
 [3] pb-ext - Enhanced PocketBase Server (538 tokens, 2655 chars, 0 params)
 [4] pb-ext - Scripts Documentation (463 tokens, 3249 chars, 0 params)
 [5] pb-ext - Collections Implementation (395 tokens, 2547 chars, 0 params)
 [6] pb-ext - Handlers Implementation (1,913 tokens, 10925 chars, 0 params)
 [7] pb-ext - Jobs Implementation (1,078 tokens, 6490 chars, 0 params)
 [8] pb-ext - Routes Implementation (433 tokens, 2744 chars, 0 params)
-[9] Going to production (1,315 tokens, 8569 chars, 0 params)
+[9] Going to production (1,347 tokens, 8734 chars, 0 params)
 [10] pb-deployer - PocketBase Production Deployment (488 tokens, 2626 chars, 0 params)
-[11] Introduction - Collections (1,532 tokens, 9363 chars, 0 params)
+[11] Introduction - Collections (1,559 tokens, 9474 chars, 0 params)
 [12] Introduction - API rules and filters (1,573 tokens, 9704 chars, 0 params)
-[13] Introduction - Working with relations (1,090 tokens, 5911 chars, 0 params)
-[14] Introduction - Authentication (2,329 tokens, 14233 chars, 0 params)
-[15] Introduction - Files upload and handling (1,246 tokens, 7422 chars, 0 params)
-[16] Web APIs reference - API Collections (6,892 tokens, 32086 chars, 15 params)
-[17] Web APIs reference - API Records (10,831 tokens, 39850 chars, 68 params)
-[18] Web APIs reference - API Realtime (787 tokens, 3765 chars, 2 params)
-[19] Web APIs reference - API Files (734 tokens, 1866 chars, 6 params)
-[20] Web APIs reference - API Crons (526 tokens, 2009 chars, 2 params)
-[21] Web APIs reference - API Settings (3,464 tokens, 11205 chars, 46 params)
-[22] Web APIs reference - API Logs (3,125 tokens, 8663 chars, 9 params)
+[13] Introduction - Working with relations (1,172 tokens, 6211 chars, 0 params)
+[14] Introduction - Authentication (2,710 tokens, 16146 chars, 0 params)
+[15] Introduction - Files upload and handling (1,500 tokens, 8520 chars, 0 params)
+[16] Web APIs reference - API Collections (7,354 tokens, 34270 chars, 15 params)
+[17] Web APIs reference - API Records (11,565 tokens, 43210 chars, 68 params)
+[18] Web APIs reference - API Realtime (874 tokens, 4236 chars, 2 params)
+[19] Web APIs reference - API Files (761 tokens, 1974 chars, 6 params)
+[20] Web APIs reference - API Crons (641 tokens, 2557 chars, 2 params)
+[21] Web APIs reference - API Settings (3,894 tokens, 13337 chars, 46 params)
+[22] Web APIs reference - API Logs (3,329 tokens, 9580 chars, 9 params)
 [23] Web APIs reference - API Health (263 tokens, 644 chars, 1 params)
-[24] Web APIs reference - API Backups (1,096 tokens, 4897 chars, 7 params)
-[25] Extend with JavaScript - Overview (969 tokens, 6170 chars, 0 params)
-[26] Extend with Go - Overview (747 tokens, 4410 chars, 0 params)
-[27] Extend with Go - Event hooks (11,272 tokens, 74028 chars, 0 params)
-[28] Extend with Go - Routing (3,254 tokens, 19896 chars, 0 params)
-[29] Extend with Go - Database (2,030 tokens, 10802 chars, 0 params)
-[30] Extend with Go - Record operations (2,303 tokens, 14206 chars, 0 params)
+[24] Web APIs reference - API Backups (1,557 tokens, 7135 chars, 7 params)
+[25] Extend with JavaScript - Overview (988 tokens, 6250 chars, 0 params)
+[26] Extend with Go - Overview (751 tokens, 4427 chars, 0 params)
+[27] Extend with Go - Event hooks (12,020 tokens, 77830 chars, 0 params)
+[28] Extend with Go - Routing (3,374 tokens, 20432 chars, 0 params)
+[29] Extend with Go - Database (2,040 tokens, 10846 chars, 0 params)
+[30] Extend with Go - Record operations (2,374 tokens, 14551 chars, 0 params)
 [31] Extend with Go - Collection operations (847 tokens, 5686 chars, 0 params)
-[32] Extend with Go - Migrations (1,212 tokens, 7944 chars, 0 params)
+[32] Extend with Go - Migrations (1,243 tokens, 8119 chars, 0 params)
 [33] Extend with Go - Jobs scheduling (304 tokens, 1612 chars, 0 params)
-[34] Extend with Go - Sending emails (365 tokens, 2030 chars, 0 params)
-[35] Extend with Go - Rendering templates (510 tokens, 2657 chars, 0 params)
+[34] Extend with Go - Sending emails (378 tokens, 2079 chars, 0 params)
+[35] Extend with Go - Rendering templates (514 tokens, 2674 chars, 0 params)
 [36] Extend with Go - Console commands (166 tokens, 788 chars, 0 params)
-[37] Extend with Go - Realtime messaging (310 tokens, 1848 chars, 0 params)
-[38] Extend with Go - Filesystem (567 tokens, 3460 chars, 0 params)
-[39] Extend with Go - Logging (590 tokens, 3007 chars, 0 params)
-[40] Extend with Go - Testing (631 tokens, 3579 chars, 0 params)
+[37] Extend with Go - Realtime messaging (337 tokens, 1948 chars, 0 params)
+[38] Extend with Go - Filesystem (593 tokens, 3630 chars, 0 params)
+[39] Extend with Go - Logging (593 tokens, 3023 chars, 0 params)
+[40] Extend with Go - Testing (659 tokens, 3762 chars, 0 params)
 [41] Extend with Go - Miscellaneous (315 tokens, 1752 chars, 0 params)
 [42] Extend with Go - Record proxy (425 tokens, 2468 chars, 0 params)
-[43] Extend with JavaScript - Overview (969 tokens, 6170 chars, 0 params)
-[44] Extend with JavaScript - Event hooks (7,093 tokens, 50043 chars, 0 params)
-[45] Extend with JavaScript - Routing (2,183 tokens, 13256 chars, 0 params)
-[46] Extend with JavaScript - Database (2,044 tokens, 10835 chars, 0 params)
-[47] Extend with JavaScript - Record operations (2,083 tokens, 13157 chars, 0 params)
+[43] Extend with JavaScript - Overview (988 tokens, 6250 chars, 0 params)
+[44] Extend with JavaScript - Event hooks (7,731 tokens, 52907 chars, 0 params)
+[45] Extend with JavaScript - Routing (2,255 tokens, 13545 chars, 0 params)
+[46] Extend with JavaScript - Database (2,055 tokens, 10880 chars, 0 params)
+[47] Extend with JavaScript - Record operations (2,138 tokens, 13415 chars, 0 params)
 [48] Extend with JavaScript - Collection operations (536 tokens, 3324 chars, 0 params)
-[49] Extend with JavaScript - Migrations (776 tokens, 5209 chars, 0 params)
+[49] Extend with JavaScript - Migrations (807 tokens, 5368 chars, 0 params)
 [50] Extend with JavaScript - Jobs scheduling (162 tokens, 796 chars, 0 params)
-[51] Extend with JavaScript - Sending emails (251 tokens, 1413 chars, 0 params)
+[51] Extend with JavaScript - Sending emails (257 tokens, 1431 chars, 0 params)
 [52] Extend with JavaScript - Rendering templates (364 tokens, 1760 chars, 0 params)
 [53] Extend with JavaScript - Console commands (117 tokens, 535 chars, 0 params)
-[54] Extend with JavaScript - Realtime messaging (250 tokens, 1447 chars, 0 params)
-[55] Extend with JavaScript - Filesystem (506 tokens, 3158 chars, 0 params)
-[56] Extend with JavaScript - Logging (610 tokens, 3108 chars, 0 params)
+[54] Extend with JavaScript - Realtime messaging (278 tokens, 1547 chars, 0 params)
+[55] Extend with JavaScript - Filesystem (531 tokens, 3327 chars, 0 params)
+[56] Extend with JavaScript - Logging (613 tokens, 3117 chars, 0 params)
 
 🔧 CUSTOM PACKAGES INTEGRATED
 ================================================================================

@@ -1,9 +1,6 @@
 # POCKETBASE DOCS|2025-10-15|56 sections
 
 ## 1.Introduction
-# Introduction
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Introduction  Please keep in mind that PocketBase is still under active development and full backward
 compatibility is not guaranteed before reaching v1.0.0. PocketBase is NOT recommended for
 production critical applications yet, unless you are fine with reading the
@@ -21,9 +18,12 @@ up your first superuser account
 (you can also create the first superuser manually via
 ./pocketbase superuser create EMAIL PASS)
 The started web server has the following default routes:
+-http://127.0.0.1:8090
 - if pb_public directory exists, serves the static content from it (html, css, images,
 etc.)
+-http://127.0.0.1:8090/_/
 - superusers dashboard
+-http://127.0.0.1:8090/api/
 - REST-ish API
 The prebuilt PocketBase executable will create and manage 2 new directories alongside the executable:
 -pb_data - stores your application data, uploaded files, etc. (usually should be added in
@@ -37,9 +37,6 @@ You could find all available commands and their options by running
 ./pocketbase [command] --help
 
 ## 2.How to use PocketBase
-# How to use PocketBase
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 How to use PocketBase The easiest way to use PocketBase is by interacting with its Web APIs directly from the client-side (e.g.
 mobile app or browser SPA).
 It was designed with this exact use case in mind and it is also the reason why there are general purpose
@@ -135,6 +132,7 @@ save:    async (serialized) => AsyncStorage.setItem('pb_auth', serialized),
 initial: AsyncStorage.getItem('pb_auth'),
 // initialize the PocketBase client
 // (it is OK to have a single/global instance for the duration of your application)
+const pb = new PocketBase('http://127.0.0.1:8090', store);
 console.log(pb.authStore.record)  import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // for simplicity we are using a simple SharedPreferences instance
@@ -146,6 +144,7 @@ save:    (String data) async => prefs.setString('pb_auth', data),
 initial: prefs.getString('pb_auth'),
 // initialize the PocketBase client
 // (it is OK to have a single/global instance for the duration of your application)
+final pb = PocketBase('http://127.0.0.1:8090', authStore: store);
 print(pb.authStore.record);      React Native file upload on Android and iOS    At the time of writing, React Native on Android and iOS seems to have a non-standard
 FormData implementation and for uploading files on these platforms it requires the following
 special object syntax:
@@ -195,54 +194,43 @@ Enhanced PocketBase server with monitoring, logging & API docs.
 ```go
 package main
 import (
-	"flag"
-	"log"
-	app "github.com/magooney-loon/pb-ext/core"
-	"github.com/pocketbase/pocketbase/core"
-)
+"flag"
+"log"
+app "github.com/magooney-loon/pb-ext/core"
+"github.com/pocketbase/pocketbase/core"
 func main() {
-	devMode := flag.Bool("dev", false, "Run in developer mode")
-	flag.Parse()
-	initApp(*devMode)
-}
+devMode := flag.Bool("dev", false, "Run in developer mode")
+flag.Parse()
+initApp(*devMode)
 func initApp(devMode bool) {
-	var opts []app.Option
-	if devMode {
-		opts = append(opts, app.InDeveloperMode())
-	} else {
-		opts = append(opts, app.InNormalMode())
-	}
-	srv := app.New(opts...)
-	app.SetupLogging(srv)
-	registerCollections(srv.App())
-	registerRoutes(srv.App())
-	registerJobs(srv.App())
-	srv.App().OnServe().BindFunc(func(e *core.ServeEvent) error {
-		app.SetupRecovery(srv.App(), e)
-		return e.Next()
-	})
-	if err := srv.Start(); err != nil {
-		srv.App().Logger().Error("Fatal application error",
-			"error", err,
-			"uptime", srv.Stats().StartTime,
-			"total_requests", srv.Stats().TotalRequests.Load(),
-			"active_connections", srv.Stats().ActiveConnections.Load(),
-			"last_request_time", srv.Stats().LastRequestTime.Load(),
-		)
-		log.Fatal(err)
-	}
-}
+var opts []app.Option
+if devMode {
+opts = append(opts, app.InDeveloperMode())
+} else {
+opts = append(opts, app.InNormalMode())
+srv := app.New(opts...)
+app.SetupLogging(srv)
+registerCollections(srv.App())
+registerRoutes(srv.App())
+registerJobs(srv.App())
+srv.App().OnServe().BindFunc(func(e *core.ServeEvent) error {
+app.SetupRecovery(srv.App(), e)
+if err := srv.Start(); err != nil {
+srv.App().Logger().Error("Fatal application error",
+"error", err,
+"uptime", srv.Stats().StartTime,
+"total_requests", srv.Stats().TotalRequests.Load(),
+"active_connections", srv.Stats().ActiveConnections.Load(),
+"last_request_time", srv.Stats().LastRequestTime.Load(),
+log.Fatal(err)
 // Example models in cmd/server/collections.go
 // Example routes in cmd/server/routes.go
 // Example handlers in cmd/server/handlers.go
 // Example cron jobs in cmd/server/jobs.go
-//
 // You can restructure Your project as You wish,
 // just keep this main.go in cmd/server/main.go
-//
 // Consider using the cmd/scripts commands for
 // streamlined fullstack dx with +Svelte5kit+
-//
 // Ready for a production build deployment?
 // https://github.com/magooney-loon/pb-deployer
 ```
@@ -267,7 +255,6 @@ $ go run cmd/scripts/main.go
 ```
 $ go run cmd/scripts/main.go --install
 ```
-*Downloads dependencies + builds + runs in dev mode*
 ### > Frontend Compilation Only
 ```
 $ go run cmd/scripts/main.go --build-only
@@ -305,134 +292,105 @@ $ git clone https://github.com/magooney-loon/pb-deployer
 $ cd pb-deployer && go run cmd/scripts/main.go --install
 ```
 ### pb-deployer Features:
-    [✓] Automated server provisioning + security hardening
-    [✓] Zero-downtime deployment cycles with rollback
-    [✓] Production systemd service management
-    [✓] Full PocketBase v0.20+ compatibility
+[✓] Automated server provisioning + security hardening
+[✓] Zero-downtime deployment cycles with rollback
+[✓] Production systemd service management
+[✓] Full PocketBase v0.20+ compatibility
 ## [SYSTEM REQUIREMENTS]
-    [REQUIRED]
-    ├── Go 1.19+        (backend compilation)
-    ├── Node.js 16+     (frontend build system)
-    ├── npm 8+          (dependency management)
-    └── Git             (version control)
-    [OPTIONAL]
-    └── pb-deployer     (production deployment automation)
+[REQUIRED]
+├── Go 1.19+        (backend compilation)
+├── Node.js 16+     (frontend build system)
+├── npm 8+          (dependency management)
+└── Git             (version control)
+[OPTIONAL]
+└── pb-deployer     (production deployment automation)
 ## [BUILD PROCESS]
-    [DEVELOPMENT MODE]
-    1. System validation    → Check Go/Node/npm availability
-    2. Dependency install   → npm install + go mod tidy
-    3. Frontend build       → npm run build
-    4. Asset deployment     → Copy to pb_public/
-    5. Server startup       → go run ./cmd/server --dev serve
-    [PRODUCTION MODE]
-    1. Environment prep     → Clean dist/ directory
-    2. Dependency install   → Full dependency resolution
-    3. Frontend build       → Optimized production build
-    4. Server compilation   → go build -ldflags="-s -w"
-    5. Asset packaging      → Create deployment archive
-    6. Metadata generation  → Build info + package metadata
-    [TEST MODE]
-    1. System validation    → Verify test environment
-    2. Test execution       → Run all test suites
-    3. Coverage analysis    → Generate coverage reports
-    4. Report generation    → HTML/JSON/TXT outputs
+[DEVELOPMENT MODE]
+1. System validation    → Check Go/Node/npm availability
+2. Dependency install   → npm install + go mod tidy
+3. Frontend build       → npm run build
+4. Asset deployment     → Copy to pb_public/
+5. Server startup       → go run ./cmd/server --dev serve
+[PRODUCTION MODE]
+1. Environment prep     → Clean dist/ directory
+2. Dependency install   → Full dependency resolution
+3. Frontend build       → Optimized production build
+4. Server compilation   → go build -ldflags="-s -w"
+5. Asset packaging      → Create deployment archive
+6. Metadata generation  → Build info + package metadata
+[TEST MODE]
+1. System validation    → Verify test environment
+2. Test execution       → Run all test suites
+3. Coverage analysis    → Generate coverage reports
+4. Report generation    → HTML/JSON/TXT outputs
 ## [TROUBLESHOOTING]
-    [ERROR: Command not found]
-    → Ensure Go/Node/npm are installed and in system PATH
-    [ERROR: Frontend build failed]
-    → Check package.json and run 'npm install' manually
-    → Verify frontend/ directory exists with valid source
-    [ERROR: Server compilation failed]
-    → Run 'go mod tidy' to resolve dependencies
-    → Check cmd/server/main.go exists
-    [ERROR: Permission denied]
-    → Ensure write permissions for pb_public/ and dist/
+[ERROR: Command not found]
+→ Ensure Go/Node/npm are installed and in system PATH
+[ERROR: Frontend build failed]
+→ Check package.json and run 'npm install' manually
+→ Verify frontend/ directory exists with valid source
+[ERROR: Server compilation failed]
+→ Run 'go mod tidy' to resolve dependencies
+→ Check cmd/server/main.go exists
+[ERROR: Permission denied]
+→ Ensure write permissions for pb_public/ and dist/
 
 ## 5.pb-ext - Collections Implementation
 ```go
 package main
 // Collection example
 import (
-	"github.com/pocketbase/pocketbase/core"
-)
+"github.com/pocketbase/pocketbase/core"
 // registerCollections sets up all database collections for the application
 func registerCollections(app core.App) {
-	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		if err := todoCollection(e.App); err != nil {
-			app.Logger().Error("Failed to create todo collection", "error", err)
-		}
-		return e.Next()
-	})
-}
-// todoCollection creates a todos collection for CRUD demo
-func todoCollection(app core.App) error {
-	// Check if todos collection already exists
-	existingCollection, _ := app.FindCollectionByNameOrId("todos")
-	if existingCollection != nil {
-		app.Logger().Info("Todos collection already exists")
-		return nil
-	}
-	// Create new todos collection
-	collection := core.NewBaseCollection("todos")
-	// Find users collection for optional relation (v2 auth)
-	usersCollection, err := app.FindCollectionByNameOrId("users")
-	if err != nil {
-		return err
-	}
-	// Add optional user relation
-	collection.Fields.Add(&core.RelationField{
-		Name:          "user",
-		Required:      false, // Optional - v1 routes won't use this
-		CollectionId:  usersCollection.Id,
-		CascadeDelete: true,
-	})
-	// Add title field (required)
-	collection.Fields.Add(&core.TextField{
-		Name:     "title",
-		Required: true,
-		Max:      200,
-	})
-	// Add description field (optional)
-	collection.Fields.Add(&core.TextField{
-		Name:     "description",
-		Required: false,
-		Max:      1000,
-	})
-	// Add completed field (boolean, default false)
-	collection.Fields.Add(&core.BoolField{
-		Name: "completed",
-	})
-	// Add priority field (select)
-	collection.Fields.Add(&core.SelectField{
-		Name:   "priority",
-		Values: []string{"low", "medium", "high"},
-	})
-	// Add auto-date fields
-	collection.Fields.Add(&core.AutodateField{
-		Name:     "created",
-		OnCreate: true,
-	})
-	collection.Fields.Add(&core.AutodateField{
-		Name:     "updated",
-		OnCreate: true,
-		OnUpdate: true,
-	})
-	// Set collection rules - public access for v1
-	collection.ViewRule = nil   // Public read
-	collection.CreateRule = nil // Public create
-	collection.UpdateRule = nil // Public update
-	collection.DeleteRule = nil // Public delete
-	// Add indexes
-	collection.AddIndex("idx_todos_user", false, "user", "")
-	collection.AddIndex("idx_todos_completed", false, "completed", "")
-	// Save the collection
-	if err := app.Save(collection); err != nil {
-		app.Logger().Error("Failed to create todos collection", "error", err)
-		return err
-	}
-	app.Logger().Info("Created todos collection")
-	return nil
-}
+app.OnServe().BindFunc(func(e *core.ServeEvent) error {
+if existingCollection != nil {
+return nil
+// Find users collection for optional relation (v2 auth)
+usersCollection, err := app.FindCollectionByNameOrId("users")
+if err != nil {
+return err
+// Add optional user relation
+collection.Fields.Add(&core.RelationField{
+Name:          "user",
+Required:      false, // Optional - v1 routes won't use this
+CollectionId:  usersCollection.Id,
+CascadeDelete: true,
+// Add title field (required)
+collection.Fields.Add(&core.TextField{
+Name:     "title",
+Required: true,
+Max:      200,
+// Add description field (optional)
+collection.Fields.Add(&core.TextField{
+Name:     "description",
+Required: false,
+Max:      1000,
+// Add completed field (boolean, default false)
+collection.Fields.Add(&core.BoolField{
+Name: "completed",
+// Add priority field (select)
+collection.Fields.Add(&core.SelectField{
+Name:   "priority",
+Values: []string{"low", "medium", "high"},
+// Add auto-date fields
+collection.Fields.Add(&core.AutodateField{
+Name:     "created",
+OnCreate: true,
+collection.Fields.Add(&core.AutodateField{
+Name:     "updated",
+OnCreate: true,
+OnUpdate: true,
+// Set collection rules - public access for v1
+collection.ViewRule = nil   // Public read
+collection.CreateRule = nil // Public create
+collection.UpdateRule = nil // Public update
+collection.DeleteRule = nil // Public delete
+// Add indexes
+// Save the collection
+if err := app.Save(collection); err != nil {
+return err
+return nil
 ```
 
 ## 6.pb-ext - Handlers Implementation
@@ -440,459 +398,274 @@ func todoCollection(app core.App) error {
 package main
 // API_SOURCE
 import (
-	"encoding/json"
-	"net/http"
-	"strconv"
-	"time"
-	"github.com/pocketbase/pocketbase/core"
-)
+"encoding/json"
+"net/http"
+"strconv"
+"time"
+"github.com/pocketbase/pocketbase/core"
 // Request types
-type TodoRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
-	Priority    string `json:"priority,omitempty"` // low, medium, high
-	Completed   bool   `json:"completed"`
-}
-type TodoPatchRequest struct {
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Priority    *string `json:"priority,omitempty"`
-	Completed   *bool   `json:"completed,omitempty"`
-}
+Title       string `json:"title"`
+Description string `json:"description,omitempty"`
+Priority    string `json:"priority,omitempty"` // low, medium, high
+Completed   bool   `json:"completed"`
+Title       *string `json:"title,omitempty"`
+Description *string `json:"description,omitempty"`
+Priority    *string `json:"priority,omitempty"`
+Completed   *bool   `json:"completed,omitempty"`
 // API_DESC Get current server time in multiple formats
 // API_TAGS public,utility,time
 func timeHandler(c *core.RequestEvent) error {
-	now := time.Now()
-	return c.JSON(http.StatusOK, map[string]any{
-		"time": map[string]string{
-			"iso":       now.Format(time.RFC3339),
-			"unix":      strconv.FormatInt(now.Unix(), 10),
-			"unix_nano": strconv.FormatInt(now.UnixNano(), 10),
-			"utc":       now.UTC().Format(time.RFC3339),
-		},
-		"server":  "pb-ext",
-		"version": "1.0.0",
-	})
-}
-// API_DESC Create a new todo item
-// API_TAGS todos,create
-func createTodoHandler(c *core.RequestEvent) error {
-	// Check authentication - required for creation
-	if c.Auth == nil {
-		return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
-	}
-	var req TodoRequest
-	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{"error": "Invalid JSON payload"})
-	}
-	if req.Title == "" {
-		return c.JSON(http.StatusBadRequest, map[string]any{"error": "Title is required"})
-	}
-	// Validate priority if provided
-	if req.Priority != "" && req.Priority != "low" && req.Priority != "medium" && req.Priority != "high" {
-		return c.JSON(http.StatusBadRequest, map[string]any{"error": "Priority must be 'low', 'medium', or 'high'"})
-	}
-	// Default priority to medium if not provided
-	if req.Priority == "" {
-		req.Priority = "medium"
-	}
-	// Create todo record data
-	todoData := map[string]any{
-		"title":       req.Title,
-		"description": req.Description,
-		"priority":    req.Priority,
-		"completed":   req.Completed,
-	}
-	// Only set user field if authenticated user is from users collection
-	// Superusers/admins don't have records in users collection
-	if c.Auth.Collection().Name == "users" {
-		todoData["user"] = c.Auth.Id
-	}
-	// If authenticated as superuser, leave user field empty or handle differently
-	// Create record in todos collection
-	collection, err := c.App.FindCollectionByNameOrId("todos")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
-	}
-	record := core.NewRecord(collection)
-	record.Load(todoData)
-	if err := c.App.Save(record); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to create todo"})
-	}
-	return c.JSON(http.StatusCreated, map[string]any{
-		"message": "Todo created successfully! ✅",
-		"todo": map[string]any{
-			"id":          record.Id,
-			"title":       record.GetString("title"),
-			"description": record.GetString("description"),
-			"priority":    record.GetString("priority"),
-			"completed":   record.GetBool("completed"),
-			"created_at":  record.GetDateTime("created"),
-			"user_id":     record.GetString("user"),
-			"created_by":  c.Auth.Collection().Name, // Show if created by user or admin
-		},
-	})
-}
-// API_DESC Get all todos with optional filtering
-// API_TAGS todos,list,read
-func getTodosHandler(c *core.RequestEvent) error {
-	collection, err := c.App.FindCollectionByNameOrId("todos")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
-	}
-	// Build query with optional filters
-	filter := ""
-	filterParams := make(map[string]any)
-	// Filter by completion status if provided
-	if completed := c.Request.URL.Query().Get("completed"); completed != "" {
-		if completed == "true" || completed == "1" {
-			filter = "completed = true"
-		} else if completed == "false" || completed == "0" {
-			filter = "completed = false"
-		}
-	}
-	// Filter by priority if provided
-	if priority := c.Request.URL.Query().Get("priority"); priority != "" {
-		if filter != "" {
-			filter += " && "
-		}
-		filter += "priority = {:priority}"
-		filterParams["priority"] = priority
-	}
-	// For authenticated requests, filter by user (only if user is from users collection)
-	if c.Auth != nil && c.Auth.Collection().Name == "users" {
-		if filter != "" {
-			filter += " && "
-		}
-		filter += "user = {:userId}"
-		filterParams["userId"] = c.Auth.Id
-	}
-	records, err := c.App.FindRecordsByFilter(collection, filter, "-created", 100, 0, filterParams)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to fetch todos"})
-	}
-	todos := make([]map[string]any, len(records))
-	for i, record := range records {
-		todos[i] = map[string]any{
-			"id":          record.Id,
-			"title":       record.GetString("title"),
-			"description": record.GetString("description"),
-			"priority":    record.GetString("priority"),
-			"completed":   record.GetBool("completed"),
-			"created_at":  record.GetDateTime("created"),
-			"updated_at":  record.GetDateTime("updated"),
-		}
-		// Include user info if available
-		if userId := record.GetString("user"); userId != "" {
-			todos[i]["user_id"] = userId
-		}
-	}
-	return c.JSON(http.StatusOK, map[string]any{
-		"message": "Todos retrieved successfully 📋",
-		"todos":   todos,
-		"count":   len(todos),
-		"filters": map[string]any{
-			"completed": c.Request.URL.Query().Get("completed"),
-			"priority":  c.Request.URL.Query().Get("priority"),
-		},
-	})
-}
-// API_DESC Get a specific todo by ID
-// API_TAGS todos,read,single
-func getTodoHandler(c *core.RequestEvent) error {
-	todoID := c.Request.PathValue("id")
-	collection, err := c.App.FindCollectionByNameOrId("todos")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
-	}
-	record, err := c.App.FindRecordById(collection, todoID)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]any{"error": "Todo not found"})
-	}
-	// For authenticated requests, check ownership (only enforce for regular users)
-	if c.Auth != nil && c.Auth.Collection().Name == "users" {
-		if userID := record.GetString("user"); userID != "" && userID != c.Auth.Id {
-			return c.JSON(http.StatusForbidden, map[string]any{"error": "Access denied"})
-		}
-	}
-	return c.JSON(http.StatusOK, map[string]any{
-		"message": "Todo retrieved successfully 📖",
-		"todo": map[string]any{
-			"id":          record.Id,
-			"title":       record.GetString("title"),
-			"description": record.GetString("description"),
-			"priority":    record.GetString("priority"),
-			"completed":   record.GetBool("completed"),
-			"created_at":  record.GetDateTime("created"),
-			"updated_at":  record.GetDateTime("updated"),
-			"user_id":     record.GetString("user"),
-		},
-	})
-}
-// API_DESC Update a todo item (partial update)
-// API_TAGS todos,update,patch
-func updateTodoHandler(c *core.RequestEvent) error {
-	// Check authentication - required for updates
-	if c.Auth == nil {
-		return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
-	}
-	todoID := c.Request.PathValue("id")
-	collection, err := c.App.FindCollectionByNameOrId("todos")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
-	}
-	record, err := c.App.FindRecordById(collection, todoID)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]any{"error": "Todo not found"})
-	}
-	// Check ownership - regular users can only update their own todos, superusers can update any
-	if c.Auth.Collection().Name == "users" {
-		if userID := record.GetString("user"); userID != c.Auth.Id {
-			return c.JSON(http.StatusForbidden, map[string]any{"error": "Access denied - you can only update your own todos"})
-		}
-	}
-	var req TodoPatchRequest
-	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]any{"error": "Invalid JSON payload"})
-	}
-	// Apply updates
-	updates := make(map[string]any)
-	if req.Title != nil {
-		if *req.Title == "" {
-			return c.JSON(http.StatusBadRequest, map[string]any{"error": "Title cannot be empty"})
-		}
-		record.Set("title", *req.Title)
-		updates["title"] = *req.Title
-	}
-	if req.Description != nil {
-		record.Set("description", *req.Description)
-		updates["description"] = *req.Description
-	}
-	if req.Priority != nil {
-		if *req.Priority != "low" && *req.Priority != "medium" && *req.Priority != "high" {
-			return c.JSON(http.StatusBadRequest, map[string]any{"error": "Priority must be 'low', 'medium', or 'high'"})
-		}
-		record.Set("priority", *req.Priority)
-		updates["priority"] = *req.Priority
-	}
-	if req.Completed != nil {
-		record.Set("completed", *req.Completed)
-		updates["completed"] = *req.Completed
-	}
-	if err := c.App.Save(record); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to update todo"})
-	}
-	return c.JSON(http.StatusOK, map[string]any{
-		"message": "Todo updated successfully! ✏️",
-		"todo": map[string]any{
-			"id":          record.Id,
-			"title":       record.GetString("title"),
-			"description": record.GetString("description"),
-			"priority":    record.GetString("priority"),
-			"completed":   record.GetBool("completed"),
-			"updated_at":  record.GetDateTime("updated"),
-		},
-		"updates": updates,
-	})
-}
-// API_DESC Delete a todo item
-// API_TAGS todos,delete
-func deleteTodoHandler(c *core.RequestEvent) error {
-	// Check authentication - required for deletion
-	if c.Auth == nil {
-		return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
-	}
-	todoID := c.Request.PathValue("id")
-	collection, err := c.App.FindCollectionByNameOrId("todos")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
-	}
-	record, err := c.App.FindRecordById(collection, todoID)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]any{"error": "Todo not found"})
-	}
-	// Check ownership - regular users can only delete their own todos, superusers can delete any
-	if c.Auth.Collection().Name == "users" {
-		if userID := record.GetString("user"); userID != c.Auth.Id {
-			return c.JSON(http.StatusForbidden, map[string]any{"error": "Access denied - you can only delete your own todos"})
-		}
-	}
-	if err := c.App.Delete(record); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to delete todo"})
-	}
-	return c.JSON(http.StatusOK, map[string]any{
-		"message": "Todo deleted successfully! 🗑️",
-		"deleted_todo": map[string]any{
-			"id":    todoID,
-			"title": record.GetString("title"),
-		},
-		"deleted_at": time.Now().Format(time.RFC3339),
-	})
-}
+now := time.Now()
+return c.JSON(http.StatusOK, map[string]any{
+"time": map[string]string{
+"iso":       now.Format(time.RFC3339),
+"unix":      strconv.FormatInt(now.Unix(), 10),
+"unix_nano": strconv.FormatInt(now.UnixNano(), 10),
+"utc":       now.UTC().Format(time.RFC3339),
+"server":  "pb-ext",
+"version": "1.0.0",
+// Check authentication - required for creation
+if c.Auth == nil {
+return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
+if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Invalid JSON payload"})
+if req.Title == "" {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Title is required"})
+// Validate priority if provided
+if req.Priority != "" && req.Priority != "low" && req.Priority != "medium" && req.Priority != "high" {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Priority must be 'low', 'medium', or 'high'"})
+// Default priority to medium if not provided
+if req.Priority == "" {
+req.Priority = "medium"
+"title":       req.Title,
+"description": req.Description,
+"priority":    req.Priority,
+"completed":   req.Completed,
+// Only set user field if authenticated user is from users collection
+// Superusers/admins don't have records in users collection
+if c.Auth.Collection().Name == "users" {
+// If authenticated as superuser, leave user field empty or handle differently
+if err != nil {
+return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
+record := core.NewRecord(collection)
+if err := c.App.Save(record); err != nil {
+return c.JSON(http.StatusCreated, map[string]any{
+"id":          record.Id,
+"title":       record.GetString("title"),
+"description": record.GetString("description"),
+"priority":    record.GetString("priority"),
+"completed":   record.GetBool("completed"),
+"created_at":  record.GetDateTime("created"),
+"user_id":     record.GetString("user"),
+"created_by":  c.Auth.Collection().Name, // Show if created by user or admin
+if err != nil {
+return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
+// Build query with optional filters
+filter := ""
+filterParams := make(map[string]any)
+// Filter by completion status if provided
+if completed := c.Request.URL.Query().Get("completed"); completed != "" {
+if completed == "true" || completed == "1" {
+filter = "completed = true"
+} else if completed == "false" || completed == "0" {
+filter = "completed = false"
+// Filter by priority if provided
+if priority := c.Request.URL.Query().Get("priority"); priority != "" {
+if filter != "" {
+filter += " && "
+filter += "priority = {:priority}"
+filterParams["priority"] = priority
+// For authenticated requests, filter by user (only if user is from users collection)
+if c.Auth != nil && c.Auth.Collection().Name == "users" {
+if filter != "" {
+filter += " && "
+filter += "user = {:userId}"
+filterParams["userId"] = c.Auth.Id
+records, err := c.App.FindRecordsByFilter(collection, filter, "-created", 100, 0, filterParams)
+if err != nil {
+for i, record := range records {
+"id":          record.Id,
+"title":       record.GetString("title"),
+"description": record.GetString("description"),
+"priority":    record.GetString("priority"),
+"completed":   record.GetBool("completed"),
+"created_at":  record.GetDateTime("created"),
+"updated_at":  record.GetDateTime("updated"),
+// Include user info if available
+if userId := record.GetString("user"); userId != "" {
+return c.JSON(http.StatusOK, map[string]any{
+"filters": map[string]any{
+"completed": c.Request.URL.Query().Get("completed"),
+"priority":  c.Request.URL.Query().Get("priority"),
+if err != nil {
+return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
+if err != nil {
+// For authenticated requests, check ownership (only enforce for regular users)
+if c.Auth != nil && c.Auth.Collection().Name == "users" {
+if userID := record.GetString("user"); userID != "" && userID != c.Auth.Id {
+return c.JSON(http.StatusForbidden, map[string]any{"error": "Access denied"})
+return c.JSON(http.StatusOK, map[string]any{
+"id":          record.Id,
+"title":       record.GetString("title"),
+"description": record.GetString("description"),
+"priority":    record.GetString("priority"),
+"completed":   record.GetBool("completed"),
+"created_at":  record.GetDateTime("created"),
+"updated_at":  record.GetDateTime("updated"),
+"user_id":     record.GetString("user"),
+// Check authentication - required for updates
+if c.Auth == nil {
+return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
+if err != nil {
+return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
+if err != nil {
+if c.Auth.Collection().Name == "users" {
+if userID := record.GetString("user"); userID != c.Auth.Id {
+if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Invalid JSON payload"})
+// Apply updates
+updates := make(map[string]any)
+if req.Title != nil {
+if *req.Title == "" {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Title cannot be empty"})
+record.Set("title", *req.Title)
+updates["title"] = *req.Title
+if req.Description != nil {
+record.Set("description", *req.Description)
+updates["description"] = *req.Description
+if req.Priority != nil {
+if *req.Priority != "low" && *req.Priority != "medium" && *req.Priority != "high" {
+return c.JSON(http.StatusBadRequest, map[string]any{"error": "Priority must be 'low', 'medium', or 'high'"})
+record.Set("priority", *req.Priority)
+updates["priority"] = *req.Priority
+if req.Completed != nil {
+record.Set("completed", *req.Completed)
+updates["completed"] = *req.Completed
+if err := c.App.Save(record); err != nil {
+return c.JSON(http.StatusOK, map[string]any{
+"id":          record.Id,
+"title":       record.GetString("title"),
+"description": record.GetString("description"),
+"priority":    record.GetString("priority"),
+"completed":   record.GetBool("completed"),
+"updated_at":  record.GetDateTime("updated"),
+"updates": updates,
+// Check authentication - required for deletion
+if c.Auth == nil {
+return c.JSON(http.StatusUnauthorized, map[string]any{"error": "Authentication required"})
+if err != nil {
+return c.JSON(http.StatusInternalServerError, map[string]any{"error": "Collection not found"})
+if err != nil {
+if c.Auth.Collection().Name == "users" {
+if userID := record.GetString("user"); userID != c.Auth.Id {
+if err := c.App.Delete(record); err != nil {
+return c.JSON(http.StatusOK, map[string]any{
+"title": record.GetString("title"),
+"deleted_at": time.Now().Format(time.RFC3339),
 ```
 
 ## 7.pb-ext - Jobs Implementation
 ```go
 package main
 import (
-	"fmt"
-	"time"
-	"github.com/magooney-loon/pb-ext/core/server"
-	"github.com/pocketbase/pocketbase/core"
-)
+"fmt"
+"time"
+"github.com/magooney-loon/pb-ext/core/server"
+"github.com/pocketbase/pocketbase/core"
 func registerJobs(app core.App) {
-	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		// Register example cron jobs
-		if err := helloJob(app); err != nil {
-			app.Logger().Error("Failed to register hello job", "error", err)
-			return err
-		}
-		if err := dailyCleanupJob(app); err != nil {
-			app.Logger().Error("Failed to register daily cleanup job", "error", err)
-			return err
-		}
-		if err := weeklyStatsJob(app); err != nil {
-			app.Logger().Error("Failed to register weekly stats job", "error", err)
-			return err
-		}
-		app.Logger().Info("All cron jobs registered successfully")
-		return e.Next()
-	})
-}
+app.OnServe().BindFunc(func(e *core.ServeEvent) error {
+// Register example cron jobs
+if err := helloJob(app); err != nil {
+app.Logger().Error("Failed to register hello job", "error", err)
+return err
+if err := dailyCleanupJob(app); err != nil {
+app.Logger().Error("Failed to register daily cleanup job", "error", err)
+return err
+if err := weeklyStatsJob(app); err != nil {
+app.Logger().Error("Failed to register weekly stats job", "error", err)
+return err
+app.Logger().Info("All cron jobs registered successfully")
 func helloJob(app core.App) error {
-	jobManager := server.GetJobManager()
-	if jobManager == nil {
-		return fmt.Errorf("job manager not initialized")
-	}
-	return jobManager.RegisterJob("helloWorld", "Hello World Job",
-		"A simple demonstration job that runs every 5 minutes, outputs timestamped hello messages and simulates basic task processing",
-		"*/5 * * * *", func(jobLogger *server.JobExecutionLogger) {
-			jobLogger.Start("Hello World Job")
-			jobLogger.Info("Current time: %s", time.Now().Format("2006-01-02 15:04:05"))
-			jobLogger.Progress("Processing hello world task...")
-			// Simulate some work
-			time.Sleep(100 * time.Millisecond)
-			jobLogger.Success("Hello from cron job! Task completed successfully.")
-			jobLogger.Complete(fmt.Sprintf("Job finished at: %s", time.Now().Format("2006-01-02 15:04:05")))
-		})
-}
+jobManager := server.GetJobManager()
+if jobManager == nil {
+return fmt.Errorf("job manager not initialized")
+return jobManager.RegisterJob("helloWorld", "Hello World Job",
+"A simple demonstration job that runs every 5 minutes, outputs timestamped hello messages and simulates basic task processing",
+"*/5 * * * *", func(jobLogger *server.JobExecutionLogger) {
+jobLogger.Start("Hello World Job")
+jobLogger.Info("Current time: %s", time.Now().Format("2006-01-02 15:04:05"))
+jobLogger.Progress("Processing hello world task...")
+// Simulate some work
+time.Sleep(100 * time.Millisecond)
+jobLogger.Success("Hello from cron job! Task completed successfully.")
+jobLogger.Complete(fmt.Sprintf("Job finished at: %s", time.Now().Format("2006-01-02 15:04:05")))
 func dailyCleanupJob(app core.App) error {
-	jobManager := server.GetJobManager()
-	if jobManager == nil {
-		return fmt.Errorf("job manager not initialized")
-	}
-	return jobManager.RegisterJob("dailyCleanup", "Daily Cleanup Job",
-		"Automated maintenance job that runs daily at 2 AM to clean up completed todos older than 30 days, helping keep the database optimized",
-		"0 2 * * *", func(jobLogger *server.JobExecutionLogger) {
-			jobLogger.Start("Daily Cleanup Job")
-			jobLogger.Info("Cleanup job started at: %s", time.Now().Format("2006-01-02 15:04:05"))
-			app.Logger().Info("Running daily cleanup job", "time", time.Now())
-			// Example: Clean up old todos older than 30 days
-			collection, err := app.FindCollectionByNameOrId("todos")
-			if err != nil {
-				jobLogger.Error("Failed to find todos collection: %v", err)
-				app.Logger().Error("Failed to find todos collection", "error", err)
-				jobLogger.Fail(err)
-				return
-			}
-			jobLogger.Success("Found todos collection, proceeding with cleanup...")
-			// Delete completed todos older than 30 days
-			cutoffDate := time.Now().AddDate(0, 0, -30)
-			jobLogger.Info("Cleaning up todos older than: %s", cutoffDate.Format("2006-01-02"))
-			filter := "completed = true && created < {:cutoff}"
-			records, err := app.FindRecordsByFilter(collection, filter, "", 100, 0, map[string]any{
-				"cutoff": cutoffDate.Format("2006-01-02 15:04:05.000Z"),
-			})
-			if err != nil {
-				jobLogger.Error("Failed to find old todos: %v", err)
-				app.Logger().Error("Failed to find old todos", "error", err)
-				jobLogger.Fail(err)
-				return
-			}
-			jobLogger.Info("Found %d old completed todos to clean up", len(records))
-			deletedCount := 0
-			for _, record := range records {
-				if err := app.Delete(record); err != nil {
-					jobLogger.Error("Failed to delete todo %s: %v", record.Id, err)
-					app.Logger().Error("Failed to delete old todo", "id", record.Id, "error", err)
-				} else {
-					deletedCount++
-				}
-			}
-			jobLogger.Statistics(map[string]interface{}{
-				"total_found": len(records),
-				"deleted":     deletedCount,
-				"failed":      len(records) - deletedCount,
-			})
-			jobLogger.Complete(fmt.Sprintf("Deleted %d/%d records", deletedCount, len(records)))
-			app.Logger().Info("Daily cleanup completed", "deleted_records", deletedCount)
-		})
-}
+jobManager := server.GetJobManager()
+if jobManager == nil {
+return fmt.Errorf("job manager not initialized")
+return jobManager.RegisterJob("dailyCleanup", "Daily Cleanup Job",
+"0 2 * * *", func(jobLogger *server.JobExecutionLogger) {
+jobLogger.Start("Daily Cleanup Job")
+jobLogger.Info("Cleanup job started at: %s", time.Now().Format("2006-01-02 15:04:05"))
+app.Logger().Info("Running daily cleanup job", "time", time.Now())
+if err != nil {
+jobLogger.Fail(err)
+return
+cutoffDate := time.Now().AddDate(0, 0, -30)
+filter := "completed = true && created < {:cutoff}"
+records, err := app.FindRecordsByFilter(collection, filter, "", 100, 0, map[string]any{
+"cutoff": cutoffDate.Format("2006-01-02 15:04:05.000Z"),
+if err != nil {
+jobLogger.Fail(err)
+return
+deletedCount := 0
+for _, record := range records {
+if err := app.Delete(record); err != nil {
+} else {
+deletedCount++
+jobLogger.Statistics(map[string]interface{}{
+"total_found": len(records),
+"deleted":     deletedCount,
+"failed":      len(records) - deletedCount,
+jobLogger.Complete(fmt.Sprintf("Deleted %d/%d records", deletedCount, len(records)))
+app.Logger().Info("Daily cleanup completed", "deleted_records", deletedCount)
 func weeklyStatsJob(app core.App) error {
-	jobManager := server.GetJobManager()
-	if jobManager == nil {
-		return fmt.Errorf("job manager not initialized")
-	}
-	return jobManager.RegisterJob("weeklyStats", "Weekly Statistics Job",
-		"Weekly analytics job that runs every Sunday at midnight to generate comprehensive todo statistics including completion rates and productivity metrics",
-		"0 0 * * 0", func(jobLogger *server.JobExecutionLogger) {
-			jobLogger.Start("Weekly Statistics Job")
-			jobLogger.Info("Generating weekly report for week ending: %s", time.Now().Format("2006-01-02"))
-			app.Logger().Info("Generating weekly statistics", "time", time.Now())
-			// Example: Generate weekly todo statistics
-			collection, err := app.FindCollectionByNameOrId("todos")
-			if err != nil {
-				jobLogger.Error("Failed to find todos collection: %v", err)
-				app.Logger().Error("Failed to find todos collection", "error", err)
-				jobLogger.Fail(err)
-				return
-			}
-			jobLogger.Success("Found todos collection, analyzing data...")
-			// Count todos from the past week
-			weekAgo := time.Now().AddDate(0, 0, -7)
-			jobLogger.Info("Analyzing todos created since: %s", weekAgo.Format("2006-01-02"))
-			filter := "created >= {:week_ago}"
-			records, err := app.FindRecordsByFilter(collection, filter, "", 1000, 0, map[string]any{
-				"week_ago": weekAgo.Format("2006-01-02 15:04:05.000Z"),
-			})
-			if err != nil {
-				jobLogger.Error("Failed to fetch weekly todos: %v", err)
-				app.Logger().Error("Failed to fetch weekly todos", "error", err)
-				jobLogger.Fail(err)
-				return
-			}
-			jobLogger.Progress("Processing %d todos from the past week...", len(records))
-			completed := 0
-			pending := 0
-			for _, record := range records {
-				if record.GetBool("completed") {
-					completed++
-				} else {
-					pending++
-				}
-			}
-			completionRate := float64(0)
-			if len(records) > 0 {
-				completionRate = float64(completed) / float64(len(records)) * 100
-			}
-			// Log statistics using the structured method
-			stats := map[string]interface{}{
-				"Total todos created": len(records),
-				"Completed todos":     completed,
-				"Pending todos":       pending,
-				"Completion rate":     fmt.Sprintf("%.1f%%", completionRate),
-			}
-			jobLogger.Info("WEEKLY STATISTICS REPORT")
-			jobLogger.Statistics(stats)
-			jobLogger.Complete("Weekly statistics report generated successfully")
-			app.Logger().Info("Weekly statistics generated",
-				"total_todos_created", len(records),
-				"completed_todos", completed,
-				"pending_todos", pending,
-				"completion_rate", completionRate,
-			)
-		})
-}
+jobManager := server.GetJobManager()
+if jobManager == nil {
+return fmt.Errorf("job manager not initialized")
+return jobManager.RegisterJob("weeklyStats", "Weekly Statistics Job",
+"0 0 * * 0", func(jobLogger *server.JobExecutionLogger) {
+jobLogger.Start("Weekly Statistics Job")
+jobLogger.Info("Generating weekly report for week ending: %s", time.Now().Format("2006-01-02"))
+app.Logger().Info("Generating weekly statistics", "time", time.Now())
+if err != nil {
+jobLogger.Fail(err)
+return
+weekAgo := time.Now().AddDate(0, 0, -7)
+filter := "created >= {:week_ago}"
+records, err := app.FindRecordsByFilter(collection, filter, "", 1000, 0, map[string]any{
+"week_ago": weekAgo.Format("2006-01-02 15:04:05.000Z"),
+if err != nil {
+jobLogger.Fail(err)
+return
+completed := 0
+pending := 0
+for _, record := range records {
+if record.GetBool("completed") {
+completed++
+} else {
+pending++
+completionRate := float64(0)
+if len(records) > 0 {
+completionRate = float64(completed) / float64(len(records)) * 100
+// Log statistics using the structured method
+stats := map[string]interface{}{
+"Completion rate":     fmt.Sprintf("%.1f%%", completionRate),
+jobLogger.Info("WEEKLY STATISTICS REPORT")
+jobLogger.Statistics(stats)
+jobLogger.Complete("Weekly statistics report generated successfully")
+app.Logger().Info("Weekly statistics generated",
+"completion_rate", completionRate,
 ```
 
 ## 8.pb-ext - Routes Implementation
@@ -900,90 +673,65 @@ func weeklyStatsJob(app core.App) error {
 package main
 // API_SOURCE
 import (
-	"github.com/magooney-loon/pb-ext/core/server/api"
-	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/core"
-)
+"github.com/magooney-loon/pb-ext/core/server/api"
+"github.com/pocketbase/pocketbase/apis"
+"github.com/pocketbase/pocketbase/core"
 func registerRoutes(app core.App) {
-	// Initialize version manager with configs
-	versionManager := api.InitializeVersionedSystem(createAPIVersions(), "v1")
-	app.OnServe().BindFunc(func(e *core.ServeEvent) error {
-		// Get version-specific routers
-		v1Router, err := versionManager.GetVersionRouter("v1", e)
-		if err != nil {
-			return err
-		}
-		v2Router, err := versionManager.GetVersionRouter("v2", e)
-		if err != nil {
-			return err
-		}
-		// Register v1 routes
-		registerV1Routes(v1Router)
-		// Register v2 routes
-		registerV2Routes(v2Router)
-		return e.Next()
-	})
-	// Register version management endpoints
-	versionManager.RegisterWithServer(app)
-}
+// Initialize version manager with configs
+versionManager := api.InitializeVersionedSystem(createAPIVersions(), "v1")
+app.OnServe().BindFunc(func(e *core.ServeEvent) error {
+// Get version-specific routers
+v1Router, err := versionManager.GetVersionRouter("v1", e)
+if err != nil {
+return err
+v2Router, err := versionManager.GetVersionRouter("v2", e)
+if err != nil {
+return err
+// Register v1 routes
+registerV1Routes(v1Router)
+// Register v2 routes
+registerV2Routes(v2Router)
+// Register version management endpoints
+versionManager.RegisterWithServer(app)
 // createAPIVersions creates version configurations with reduced duplication
 func createAPIVersions() map[string]*api.APIDocsConfig {
-	baseConfig := &api.APIDocsConfig{
-		Title:       "pb-ext demo api",
-		Description: "Hello world",
-		BaseURL:     "http://127.0.0.1:8090/",
-		Enabled:     true,
-	}
-	// Create v1 config
-	v1Config := *baseConfig
-	v1Config.Version = "1.0.0"
-	v1Config.Status = "stable"
-	// Create v2 config
-	v2Config := *baseConfig
-	v2Config.Version = "2.0.0"
-	v2Config.Status = "testing"
-	return map[string]*api.APIDocsConfig{
-		"v1": &v1Config,
-		"v2": &v2Config,
-	}
-}
+baseConfig := &api.APIDocsConfig{
+Title:       "pb-ext demo api",
+Description: "Hello world",
+BaseURL:     "http://127.0.0.1:8090/",
+Enabled:     true,
+// Create v1 config
+v1Config := *baseConfig
+v1Config.Version = "1.0.0"
+v1Config.Status = "stable"
+// Create v2 config
+v2Config := *baseConfig
+v2Config.Version = "2.0.0"
+v2Config.Status = "testing"
+return map[string]*api.APIDocsConfig{
+"v1": &v1Config,
+"v2": &v2Config,
 // registerV1Routes registers all v1 API routes
 func registerV1Routes(router *api.VersionedAPIRouter) {
-	// Option 1: Manual route registration (explicit control)
-	prefix := "/api/v1"
-	router.GET(prefix+"/todos", getTodosHandler)
-	router.POST(prefix+"/todos", createTodoHandler).Bind(apis.RequireAuth())
-	router.GET(prefix+"/todos/{id}", getTodoHandler)
-	router.PATCH(prefix+"/todos/{id}", updateTodoHandler).Bind(apis.RequireAuth())
-	router.DELETE(prefix+"/todos/{id}", deleteTodoHandler).Bind(apis.RequireAuth())
-	// Option 2: CRUD convenience method (less boilerplate)
-	// Uncomment to use instead of manual registration above:
-	//
-	// v1 := router.SetPrefix("/api/v1")
-	// v1.CRUD("todos", api.CRUDHandlers{
-	// 	List:   getTodosHandler,
-	// 	Create: createTodoHandler,
-	// 	Get:    getTodoHandler,
-	// 	Patch:  updateTodoHandler,
-	// 	Delete: deleteTodoHandler,
-	// }, apis.RequireAuth()) // Auth applied to Create, Update, Patch, Delete
-}
+// Option 1: Manual route registration (explicit control)
+prefix := "/api/v1"
+// Option 2: CRUD convenience method (less boilerplate)
+// Uncomment to use instead of manual registration above:
+// v1 := router.SetPrefix("/api/v1")
+// }, apis.RequireAuth()) // Auth applied to Create, Update, Patch, Delete
 // registerV2Routes registers all v2 API routes
 func registerV2Routes(router *api.VersionedAPIRouter) {
-	// Using prefixed router for cleaner code
-	v2 := router.SetPrefix("/api/v2")
-	// Utility routes (no auth required)
-	v2.GET("/time", timeHandler)
-	// Future v2 routes can be added here easily:
-	// v2.GET("/status", statusHandler)
-	// v2.GET("/health", healthHandler)
-}
+// Using prefixed router for cleaner code
+v2 := router.SetPrefix("/api/v2")
+// Utility routes (no auth required)
+v2.GET("/time", timeHandler)
+// Future v2 routes can be added here easily:
+// v2.GET("/status", statusHandler)
+// v2.GET("/health", healthHandler)
 ```
 
 ## 9.Going to production
 # Going to production
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Going to production  ### Deployment strategies
 ##### Minimal setup
 One of the best PocketBase features is that it&#39;s completely portable. This means that it doesn&#39;t require
@@ -1058,6 +806,7 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;
 # enable if you are serving under a subpath location
 # rewrite /yourSubpath/(.*) /$1  break;
+proxy_pass http://127.0.0.1:8090;
 }  Corresponding Caddy configuration is:
 request_body {
 max_size 10MB
@@ -1154,16 +903,16 @@ e.g. pocketbase serve --encryptionEnv=PB_ENCRYPTION_KEY
 
 ## 10.pb-deployer - PocketBase Production Deployment
 <div align="center">
-  <img src="frontend/static/favicon.svg" alt="Logo" width="200">
-  <h1 align="center">pb-deployer</h1>
-  <h3 align="center">Automates the lifecycle of deploying PocketBase apps to production</h3>
-  <a href="https://github.com/magooney-loon/pb-deployer/stargazers"><img src="https://img.shields.io/github/stars/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="Stargazers"></a>
-  <a href="https://github.com/magooney-loon/pb-deployer/graphs/contributors"><img src="https://img.shields.io/github/contributors/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="Contributors"></a>
-  <a href="https://github.com/magooney-loon/pb-deployer/blob/main/LICENSE"><img src="https://img.shields.io/github/license/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="AGPL-3.0"></a>
-  <br>
-  <img src="frontend/static/deployer.png" alt="Screenshot" width="100%">
-  <h5 align="center">**WARNING**HOBBY PROJECT**</h5>
-  <a target="_blank" href="https://magooney.org/">Web Demo UI</a>
+<img src="frontend/static/favicon.svg" alt="Logo" width="200">
+<h1 align="center">pb-deployer</h1>
+<h3 align="center">Automates the lifecycle of deploying PocketBase apps to production</h3>
+<a href="https://github.com/magooney-loon/pb-deployer/stargazers"><img src="https://img.shields.io/github/stars/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="Stargazers"></a>
+<a href="https://github.com/magooney-loon/pb-deployer/graphs/contributors"><img src="https://img.shields.io/github/contributors/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="Contributors"></a>
+<a href="https://github.com/magooney-loon/pb-deployer/blob/main/LICENSE"><img src="https://img.shields.io/github/license/magooney-loon/pb-deployer?style=for-the-badge&color=blue" alt="AGPL-3.0"></a>
+<br>
+<img src="frontend/static/deployer.png" alt="Screenshot" width="100%">
+<h5 align="center">**WARNING**HOBBY PROJECT**</h5>
+<a target="_blank" href="https://magooney.org/">Web Demo UI</a>
 </div>
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/magooney-loon/pb-deployer)
 ## 🚀 Quick Start
@@ -1187,7 +936,6 @@ go run cmd/scripts/main.go --install
 └── staging/        # Temporary staging during deployments
 ```
 ## Deployment Steps
-1. **Downloading and staging deployment package**
 2. **Checking service status**
 3. **Stopping existing service**
 4. **Creating backup of current deployment**
@@ -1198,32 +946,24 @@ go run cmd/scripts/main.go --install
 9. **Starting service**
 10. **Verifying & finalizing deployment**
 <div align="center">
-  <img src="frontend/static/deployer2.png" alt="Logo" width="100%">
+<img src="frontend/static/deployer2.png" alt="Logo" width="100%">
 </div>
 See `**/*/README.md` for detailed docs.
 Make sure you loaded your SSH keys, check with `ssh-add -l`
 ## Contribution
-PRs are encouraged, but consider opening a discussion first for minor/major changelogs.
 
 ## 11.Introduction - Collections
-HTTP200:```json
+Response 200:
 {"slug:autogenerate":"abc-"}
-```
-HTTP200:```json
+Response 200:
 {"permissions+": "optionA", "roles-": ["staff", "editor"]}
-```
-HTTP200:```json
+Response 200:
 {"documents+": new File(...), "documents-": ["file1_Ab24ZjL.txt", "file2_Frq24ZjL.txt"]}
-```
-HTTP200:```json
+Response 200:
 {"users+": "USER_ID", "categories-": ["CAT_ID1", "CAT_ID2"]}
-```
-HTTP200:```json
+Response 200:
 {"lon":12.34,"lat":56.78}
-```
-# Introduction - Collections
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
+- Collections
 Collections  ### Overview
 Collections represent your application data. Under the hood they are backed by plain
 SQLite tables that are generated automatically with the collection
@@ -1399,9 +1139,7 @@ address := record.GetGeoPoint("address")  record.set("address", {"lon":12.34, "l
 const address = record.get("address")
 
 ## 12.Introduction - API rules and filters
-# Introduction - API rules and filters
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
+- API rules and filters
 API rules and filters  ### API rules
 API Rules are your collection access controls and data filters.
 Each collection has 5 rules, corresponding to the specific API action:
@@ -1565,7 +1303,7 @@ geoDistance function always results in a single row/record value meaning that &q
 type of constraint will be applied even if some of its arguments originate from a multiple relation field.
 For example:
 // offices that are less than 25km from my location (address is a geoPoint field in the offices collection)
-geoDistance(address.lon, address.lat, 23.32, 42.69) &lt; 25  ### Examples
+geoDistance(address.lon, address.lat, 23.32, 42.69) &lt; 25  #
 -Allow only registered users:
 @request.auth.id != ""
 -Allow only registered users and return records that are either &quot;active&quot; or &quot;pending&quot;:
@@ -1576,30 +1314,32 @@ geoDistance(address.lon, address.lat, 23.32, 42.69) &lt; 25  ### Examples
 title ~ "Lorem%"
 
 ## 13.Introduction - Working with relations
-# Introduction - Working with relations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
+- Working with relations
 Working with relations  ### Overview
 Let&#39;s assume that we have the following collections structure:
 The relation fields follow the same rules as any other collection field and can be set/modified
 by directly updating the field value - with a record id or array of ids, in case a multiple relation is used.
 Below is an example that shows creating a new posts record with 2 assigned tags.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const post = await pb.collection('posts').create({
 'tags':  ['TAG_ID1', 'TAG_ID2'],
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final post = await pb.collection('posts').create(body: {
 'tags':  ['TAG_ID1', 'TAG_ID2'],
 });   ### Prepend/Append to multiple relation
 To prepend/append a single or multiple relation id(s) to an existing value you can use the
 + field modifier:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const post = await pb.collection('posts').update('POST_ID', {
 // prepend single tag
 '+tags': 'TAG_ID1',
 // append multiple tags at once
 'tags+': ['TAG_ID1', 'TAG_ID2'],
 })  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final post = await pb.collection('posts').update('POST_ID', body: {
 // prepend single tag
 '+tags': 'TAG_ID1',
@@ -1609,12 +1349,14 @@ final post = await pb.collection('posts').update('POST_ID', body: {
 To remove a single or multiple relation id(s) from an existing value you can use the
 - field modifier:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const post = await pb.collection('posts').update('POST_ID', {
 // remove single tag
 'tags-': 'TAG_ID1',
 // remove multiple tags at once
 'tags-': ['TAG_ID1', 'TAG_ID2'],
 })  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final post = await pb.collection('posts').update('POST_ID', body: {
 // remove single tag
 'tags-': 'TAG_ID1',
@@ -1735,9 +1477,7 @@ separate paginated getList() request to the back-related collection to avoid tra
 large JSON payloads and to reduce the memory usage.
 
 ## 14.Introduction - Authentication
-# Introduction - Authentication
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
+- Authentication
 Authentication  ### Overview
 A single client is considered authenticated as long as it sends valid
 Authorization:YOUR_AUTH_TOKEN header with the request.
@@ -1761,12 +1501,14 @@ Web API reference
 The default identity field is the email but you can configure any other unique field like
 &quot;username&quot; (it must have a UNIQUE index).
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // after the above you can also access the auth data from the authStore
 console.log(pb.authStore.isValid);
 console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);
 // "logout" the last authenticated record
 pb.authStore.clear();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // after the above you can also access the auth data from the authStore
 print(pb.authStore.isValid);
 print(pb.authStore.token);
@@ -1790,6 +1532,7 @@ guessed or enumerated (especially when a longer duration time is configured).
 For security critical applications OTP is recommended to be used in combination with the other
 auth methods and the Multi-factor authentication option.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // send OTP email to the provided auth record
 // ... show a screen/popup to enter the password from the email ...
 // authenticate with the requested OTP id and the email password
@@ -1800,6 +1543,7 @@ console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);
 // "logout"
 pb.authStore.clear();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // send OTP email to the provided auth record
 // ... show a screen/popup to enter the password from the email ...
 // authenticate with the requested OTP id and the email password
@@ -1821,6 +1565,7 @@ This method handles everything within a single call without having to define cus
 deeplinks or even page reload.
 When creating your OAuth2 app, for a callback/redirect URL you have to use the
 https://yourdomain.com/api/oauth2-redirect
+(or when testing locally - http://127.0.0.1:8090/api/oauth2-redirect ).
 Dart  import PocketBase from 'pocketbase';
 const pb = new PocketBase('https://pocketbase.io');
 // This method initializes a one-off realtime subscription and will
@@ -1875,6 +1620,8 @@ Here is a simple web example:
 &lt;/ul>
 &lt;script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.es.mjs"
+const pb          = new PocketBase("http://127.0.0.1:8090");
+const redirectURL = "http://127.0.0.1:8090/redirect.html";
 const authMethods = await pb.collection("users").listAuthMethods();
 const providers   = authMethods.oauth2?.providers || [];
 const listItems   = [];
@@ -1904,6 +1651,8 @@ pb_public/redirect.html):
 &lt;pre id="content">Authenticating...&lt;/pre>
 &lt;script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.es.mjs"
+const pb          = new PocketBase("http://127.0.0.1:8090");
+const redirectURL = "http://127.0.0.1:8090/redirect.html";
 const contentEl   = document.getElementById("content");
 // parse the query parameters from the redirected url
 const params = (new URL(window.location)).searchParams;
@@ -1944,6 +1693,7 @@ The expected flow is:
 -On success, a regular auth response is returned, aka. token + auth record data.
 Below is an example for email/password + OTP authentication:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 try {
 } catch (err) {
 const mfaId = err.response?.mfaId;
@@ -1953,6 +1703,7 @@ throw err; // not mfa -> rethrow
 // ... show a modal for users to check their email and to enter the received code ...
 await pb.collection('users').authWithOTP(result.otpId, 'EMAIL_CODE', { 'mfaId': mfaId });
 }  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 try {
 } on ClientException catch (e) {
 final mfaId = e.response['mfaId'];
@@ -1968,6 +1719,7 @@ The generated impersonate auth tokens can have custom duration but are not renew
 For convenience the official SDKs creates and returns a standalone client that keeps the token state
 in memory, aka. only for the duration of the impersonate client instance.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // authenticate as superuser
 // impersonate
 // (the custom token duration is in seconds and it is optional)
@@ -1977,6 +1729,7 @@ console.log(impersonateClient.authStore.token);
 console.log(impersonateClient.authStore.record);
 // send requests as the impersonated user
 const items = await impersonateClient.collection("example").getFullList();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // authenticate as superuser
 // impersonate
 // (the custom token duration is in seconds and it is optional)
@@ -2012,9 +1765,7 @@ getOne(&quot;USER_ID&quot;) (see
 benchmarks
 
 ## 15.Introduction - Files upload and handling
-# Introduction - Files upload and handling
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
+- Files upload and handling
 Files upload and handling  ### Uploading files
 To upload files, you must first add a file field to your collection:
 Once added, you could create/update a Record and upload &quot;documents&quot; files by sending a
@@ -2025,6 +1776,7 @@ The max allowed size of a single file currently is limited to ~8GB (253-1 bytes)
 Here is an example how to create a new record and upload multiple files to the example &quot;documents&quot;
 file field using the SDKs:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // create a new record and upload multiple files
 // (files must be Blob or File instances)
 const createdRecord = await pb.collection('example').create({
@@ -2045,6 +1797,7 @@ formData.append('documents', file);
 // upload and create new record
 const createdRecord = await pb.collection('example').create(formData);  import 'package:pocketbase/pocketbase.dart';
 import 'package:http/http.dart' as http;
+final pb = PocketBase('http://127.0.0.1:8090');
 // create a new record and upload multiple files
 final record = await pb.collection('example').create(
 body: {
@@ -2062,10 +1815,12 @@ filename: 'file2.txt',
 Max Files option is &gt;= 2) you can use the + prefix/suffix field name modifier
 to respectively prepend/append new files alongside the already uploaded ones. For example:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const createdRecord = await pb.collection('example').update('RECORD_ID', {
 "documents+": new File(["content 3..."], "file3.txt")
 });  import 'package:pocketbase/pocketbase.dart';
 import 'package:http/http.dart' as http;
+final pb = PocketBase('http://127.0.0.1:8090');
 final record = await pb.collection('example').update(
 'RECORD_ID',
 files: [
@@ -2080,6 +1835,7 @@ If you want to delete individual file(s) from a multiple file upload field, you 
 suffix the field name with - and specify the filename(s) you want to delete. Here are some examples
 using the SDKs:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // delete all "documents" files
 await pb.collection('example').update('RECORD_ID', {
 'documents': [],
@@ -2087,6 +1843,7 @@ await pb.collection('example').update('RECORD_ID', {
 await pb.collection('example').update('RECORD_ID', {
 'documents-': ["file1.pdf", "file2.txt"],
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // delete all "documents" files
 await pb.collection('example').update('RECORD_ID', body: {
 'documents': [],
@@ -2098,9 +1855,11 @@ for multipart/form-data requests. If using
 FormData set the file field to an empty string.
 ### File URL
 Each uploaded file could be accessed by requesting its file url:
+http://127.0.0.1:8090/api/files/COLLECTION_ID_OR_NAME/RECORD_ID/FILENAME
 If your file field has the Thumb sizes option, you can get a thumb of the image file by
 adding the thumb
 query parameter to the url like this:
+http://127.0.0.1:8090/api/files/COLLECTION_ID_OR_NAME/RECORD_ID/FILENAME?thumb=100x300  Currently limited to jpg, png, gif (its first frame) and partially webp (stored as png).
 The following thumb formats are currently supported:
 -WxH
 (e.g. 100x300) - crop to WxH viewbox (from center)
@@ -2118,6 +1877,7 @@ The original file would be returned, if the requested thumb size is not found or
 If you already have a Record model instance, the SDKs provide a convenient method to generate a file url
 by its name.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const record = await pb.collection('example').getOne('RECORD_ID');
 // get only the first filename from "documents"
 // note:
@@ -2126,7 +1886,9 @@ const record = await pb.collection('example').getOne('RECORD_ID');
 // if "Max Files" was 1, then the result property would be just a string
 const firstFilename = record.documents[0];
 // returns something like:
+// http://127.0.0.1:8090/api/files/example/kfzjt5oy8r34hvn/test_52iWbGinWd.png?thumb=100x250
 const url = pb.files.getURL(record, firstFilename, {'thumb': '100x250'});  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final record = await pb.collection('example').getOne('RECORD_ID');
 // get only the first filename from "documents"
 // note:
@@ -2135,6 +1897,7 @@ final record = await pb.collection('example').getOne('RECORD_ID');
 // if "Max Files" was 1, then the result property would be just a string
 final firstFilename = record.getListValue&lt;String>('documents')[0];
 // returns something like:
+// http://127.0.0.1:8090/api/files/example/kfzjt5oy8r34hvn/test_52iWbGinWd.png?thumb=100x250
 ### Protected files
 By default all files are publicly accessible if you know their full url.
 For most applications this is fine and reasonably safe because all files have a random part appended to
@@ -2144,12 +1907,14 @@ To do this you can mark the file field as Protected from its field options in th
 Dashboard and then request the file with a special short-lived file token.
 Only requests that satisfy the View API rule of the record collection will be able
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // authenticate
 // generate a file token
 const fileToken = await pb.files.getToken();
 // retrieve an example protected file url (will be valid ~2min)
 const record = await pb.collection('example').getOne('RECORD_ID');
 const url = pb.files.getURL(record, record.myPrivateFile, {'token': fileToken});  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // authenticate
 // generate a file token
 final fileToken = await pb.files.getToken();
@@ -2223,8 +1988,6 @@ imported configuration will be deleted, including their related records
 data (default to
 false).
 # Web APIs reference - API Collections
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **page** (Number): The page (aka. offset) of the paginated list (default to 1).
 - **perPage** (Number): The max returned collections per page (default to 30).
 - **sort** (String): Specify the ORDER BY fields. Add - / + (default) in front of the attribute for DESC /
@@ -2283,10 +2046,10 @@ Ex.:
 imported configuration will be deleted, including their related records
 data (default to
 false).
-## Content
 API Collections    List collections    Returns a paginated Collections list.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // fetch a paginated collections list
 const pageResult = await pb.collections.getList(1, 100, {
 filter: 'created >= "2022-01-01 00:00:00"',
@@ -2294,6 +2057,7 @@ filter: 'created >= "2022-01-01 00:00:00"',
 const collections = await pb.collections.getFullList({ sort: '-created' });
 // or fetch only the first collection that matches the specified filter
 const collection = await pb.collections.getFirstListItem('type="auth"');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // fetch a paginated collections list
 final pageResult = await pb.collections.getList(
 page: 1,
@@ -2602,7 +2366,9 @@ and
 }      View collection    Returns a single Collection by its ID or name.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const collection = await pb.collections.getOne('demo');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final collection = await pb.collections.getOne('demo');   ###### API details
 GET /api/collections/`collectionIdOrName` Requires `Authorization:TOKEN` Path parameters Param Type Description collectionIdOrName String ID or name of the collection to view. Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -2680,6 +2446,7 @@ Responses  {
 }      Create collection    Creates a new Collection.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // create base collection
 const base = await pb.collections.create({
 name: 'exampleBase',
@@ -2713,6 +2480,7 @@ viewRule: null,
 // the schema will be autogenerated from the below query
 viewQuery: 'SELECT id, name from posts',
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // create base collection
 final base = await pb.collections.create(body: {
 'name': 'exampleBase',
@@ -2928,10 +2696,12 @@ Responses  {
 }      Update collection    Updates a single Collection by its ID or name.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const collection = await pb.collections.update('demo', {
 name: 'new_demo',
 listRule: 'created > "2022-01-01 00:00:00"',
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final collection = await pb.collections.update('demo', body: {
 'name': 'new_demo',
 'listRule': 'created > "2022-01-01 00:00:00"',
@@ -3112,7 +2882,9 @@ Responses  {
 }      Delete collection    Deletes a single Collection by its ID or name.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.collections.delete('demo');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.collections.delete('demo');   ###### API details
 DELETE /api/collections/`collectionIdOrName` Requires `Authorization:TOKEN` Path parameters Param Type Description collectionIdOrName String ID or name of the collection to view. Responses  `null`  {
 "status": 400,
@@ -3134,7 +2906,9 @@ DELETE /api/collections/`collectionIdOrName` Requires `Authorization:TOKEN` Path
 enabled relations).
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.collections.truncate('demo');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.collections.truncate('demo');   ###### API details
 DELETE /api/collections/`collectionIdOrName`/truncate Requires `Authorization:TOKEN` Path parameters Param Type Description collectionIdOrName String ID or name of the collection to truncate. Responses  `null`  {
 "status": 400,
@@ -3155,6 +2929,7 @@ DELETE /api/collections/`collectionIdOrName`/truncate Requires `Authorization:TO
 }      Import collections    Bulk imports the provided Collections configuration.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const importData = [
 name: 'collection1',
 schema: [
@@ -3165,6 +2940,7 @@ schema: [
 name: 'title',
 type: 'text',
 await pb.collections.import(importData, false);  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final importData = [
 CollectionModel(
 name: "collection1",
@@ -3198,7 +2974,9 @@ multipart/form-data. Responses  `null`  {
 (used primarily in the Dashboard UI).
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const scaffolds = await pb.collections.getScaffolds();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final scaffolds = await pb.collections.getScaffolds();   ###### API details
 GET /api/collections/meta/scaffolds Requires `Authorization:TOKEN` Responses  {
 "auth": {
@@ -3600,9 +3378,7 @@ Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,record.description:excerpt(200,true)
 # Web APIs reference - API Records
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `POST /api/collections/{collection}/records`
-## Parameters
+`POST /api/collections/{collection}/records`
 - **collectionIdOrName** (String): ID or name of the records' collection.
 - **page** (Number): The page (aka. offset) of the paginated list (default to 1).
 - **perPage** (Number): The max returned records per page (default to 30).
@@ -3710,19 +3486,16 @@ requests: [
 method: "POST",
 url: "/api/collections/example/records?expand=user",
 body: { title: "test1" },
-},
 method: "PATCH",
 url: "/api/collections/example/records/RECORD_ID",
 body: { title: "test2" },
-},
 method: "DELETE",
 url: "/api/collections/example/records/RECORD_ID",
-},
 }))
 // file for the first request
 formData.append("requests.0.document", new File(...))
 // file for the second request
-formData.append("requests.1.document", new File(...))): 
+formData.append("requests.1.document", new File(...))):
 - **collectionIdOrName** (String): ID or name of the auth collection.
 - **fields** (String): Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -3822,7 +3595,6 @@ Only the relations to which the request user has permissions to view will be exp
 Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,record.description:excerpt(200,true)
-## Content
 API Records ### CRUD actions
 List/Search records    Returns a paginated records list, supporting sorting and filtering.
 Depending on the collection&#39;s listRule value, the access to this action may or may not
@@ -3830,6 +3602,7 @@ have been restricted.
 You could find individual generated records API documentation in the &quot;Dashboard &gt; Collections
 &gt; API Preview&quot;.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // fetch a paginated records list
 const resultList = await pb.collection('posts').getList(1, 50, {
 filter: 'created >= "2022-01-01 00:00:00" &amp;&amp; someField1 != someField2',
@@ -3840,6 +3613,7 @@ sort: '-created',
 const record = await pb.collection('posts').getFirstListItem('someField="test"', {
 expand: 'relField1,relField2.subRelField',
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // fetch a paginated records list
 final resultList = await pb.collection('posts').getList(
 page: 1,
@@ -3942,9 +3716,11 @@ have been restricted.
 You could find individual generated records API documentation in the &quot;Dashboard &gt; Collections
 &gt; API Preview&quot;.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const record1 = await pb.collection('posts').getOne('RECORD_ID', {
 expand: 'relField1,relField2.subRelField',
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final record1 = await pb.collection('posts').getOne('RECORD_ID',
 expand: 'relField1,relField2.subRelField',
 );   ###### API details
@@ -3982,8 +3758,10 @@ Depending on the collection&#39;s createRule value, the access to this action ma
 have been restricted.
 You could find individual generated records API documentation from the Dashboard.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const record = await pb.collection('demo').create({
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final record = await pb.collection('demo').create(body: {
 });   ###### API details
 POST /api/collections/`collectionIdOrName`/records Path parameters Param Type Description collectionIdOrName String ID or name of the record&#39;s collection. Body Parameters Param Type Description Optional id String 15 characters string to store as record ID.
@@ -4029,8 +3807,10 @@ Depending on the collection&#39;s updateRule value, the access to this action ma
 have been restricted.
 You could find individual generated records API documentation from the Dashboard.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const record = await pb.collection('demo').update('YOUR_RECORD_ID', {
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final record = await pb.collection('demo').update('YOUR_RECORD_ID', body: {
 });   ###### API details
 PATCH /api/collections/`collectionIdOrName`/records/`recordId` Path parameters Param Type Description collectionIdOrName String ID or name of the record&#39;s collection. recordId String ID of the record to update. Body Parameters Param Type Description Schema fields Any field from the collection&#39;s schema. Additional auth record fields Optional oldPassword String Old auth record password.
@@ -4077,7 +3857,9 @@ Depending on the collection&#39;s deleteRule value, the access to this action ma
 have been restricted.
 You could find individual generated records API documentation from the Dashboard.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.collection('demo').delete('YOUR_RECORD_ID');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.collection('demo').delete('YOUR_RECORD_ID');   ###### API details
 DELETE /api/collections/`collectionIdOrName`/records/`recordId` Path parameters Param Type Description collectionIdOrName String ID or name of the record&#39;s collection. recordId String ID of the record to delete. Responses  `null`  {
 "status": 400,
@@ -4101,12 +3883,14 @@ care and configuration
 size limits; avoid large file uploads over slow S3 networks and custom hooks that
 communicate with slow external APIs).
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const batch = pb.createBatch();
 batch.collection('example1').create({ ... });
 batch.collection('example2').update('RECORD_ID', { ... });
 batch.collection('example3').delete('RECORD_ID');
 batch.collection('example4').upsert({ ... });
 const result = await batch.send();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final batch = pb.createBatch();
 batch.collection('example1').create(body: { ... });
 batch.collection('example2').update('RECORD_ID', body: { ... });
@@ -4194,7 +3978,9 @@ Responses  [
 }   ### Auth record actions
 List auth methods    Returns a public list with the allowed collection authentication methods.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const result = await pb.collection('users').listAuthMethods();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final result = await pb.collection('users').listAuthMethods();   ###### API details
 GET /api/collections/`collectionIdOrName`/auth-methods Path parameters Param Type Description collectionIdOrName String ID or name of the auth collection. Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -4228,6 +4014,7 @@ Responses  {
 }      Auth with password    Authenticate a single auth record by combination of a password and a unique identity field (e.g.
 email).
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const authData = await pb.collection('users').authWithPassword(
 'YOUR_USERNAME_OR_EMAIL',
 'YOUR_PASSWORD',
@@ -4237,6 +4024,7 @@ console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);
 // "logout" the last authenticated record
 pb.authStore.clear();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final authData = await pb.collection('users').authWithPassword(
 'YOUR_USERNAME_OR_EMAIL',
 'YOUR_PASSWORD',
@@ -4284,6 +4072,7 @@ This action usually should be called right after the provider login page redirec
 You could also check the
 OAuth2 web integration example.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const authData = await pb.collection('users').authWithOAuth2Code(
 'google',
 'CODE',
@@ -4297,6 +4086,7 @@ console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);
 // "logout" the last authenticated record
 pb.authStore.clear();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final authData = await pb.collection('users').authWithOAuth2Code(
 'google',
 'CODE',
@@ -4361,6 +4151,7 @@ Responses  {
 Note that when requesting an OTP we return an otpId even if a user with the provided email
 doesn&#39;t exist as a very basic enumeration protection.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // send OTP email to the provided auth record
 // ... show a screen/popup to enter the password from the email ...
 // authenticate with the requested OTP id and the email password
@@ -4371,6 +4162,7 @@ console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);
 // "logout"
 pb.authStore.clear();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // send OTP email to the provided auth record
 // ... show a screen/popup to enter the password from the email ...
 // authenticate with the requested OTP id and the email password
@@ -4429,11 +4221,13 @@ Responses  {
 }       Auth refresh    Returns a new auth response (token and user data) for already authenticated auth record.
 stored data in pb.authStore is still valid and up-to-date.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const authData = await pb.collection('users').authRefresh();
 // after the above you can also access the refreshed auth data from the authStore
 console.log(pb.authStore.isValid);
 console.log(pb.authStore.token);
 console.log(pb.authStore.record.id);  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final authData = await pb.collection('users').authRefresh();
 // after the above you can also access the refreshed auth data from the authStore
 print(pb.authStore.isValid);
@@ -4478,8 +4272,10 @@ Responses  {
 "data": {}
 }      Verification    Sends auth record email verification request.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmVerification('VERIFICATION_TOKEN');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmVerification('VERIFICATION_TOKEN');   ###### API details
 Confirm verification  POST /api/collections/`collectionIdOrName`/request-verification Body Parameters Param Type Description Required email String The auth record email address to send the verification request (if exists). Responses  `null`  {
@@ -4499,12 +4295,14 @@ Confirm verification  POST /api/collections/`collectionIdOrName`/request-verific
 }       Password reset    Sends auth record password reset email request.
 automatically invalidated.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmPasswordReset(
 'RESET_TOKEN',
 'NEW_PASSWORD',
 'NEW_PASSWORD_CONFIRM',
 );  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmPasswordReset(
 'RESET_TOKEN',
@@ -4528,8 +4326,10 @@ Confirm password reset  POST /api/collections/`collectionIdOrName`/request-passw
 }       Email change    Sends auth record email change request.
 automatically invalidated.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmEmailChange('EMAIL_CHANGE_TOKEN', 'YOUR_PASSWORD');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // (optional) in your custom confirmation page:
 await pb.collection('users').confirmEmailChange('EMAIL_CHANGE_TOKEN', 'YOUR_PASSWORD');   ###### API details
 Confirm email change  POST /api/collections/`collectionIdOrName`/request-email-change Requires Authorization:TOKEN
@@ -4559,6 +4359,7 @@ Body Parameters Param Type Description Required newEmail String The new email ad
 nonrefreshable auth token.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // authenticate as superuser
 // impersonate
 // (the custom token duration is optional and must be in seconds)
@@ -4568,6 +4369,7 @@ console.log(impersonateClient.authStore.token);
 console.log(impersonateClient.authStore.record);
 // send requests as the impersonated user
 impersonateClient.collection("example").getFullList();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // authenticate as superuser
 // impersonate
 // (the custom token duration is optional and must be in seconds)
@@ -4633,8 +4435,6 @@ single topic using the options
 query parameter, e.g.:
 COLLECTION_ID_OR_NAME/RECORD_ID?options={"query": {"abc": "123"}, "headers": {"x-token": "..."}} Leave empty to unsubscribe from everything.
 # Web APIs reference - API Realtime
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **Required clientId** (String): ID of the SSE client connection.
 - **Optional subscriptions** (Array<String>): The new client subscriptions to set in the format:
 COLLECTION_ID_OR_NAME or
@@ -4642,7 +4442,6 @@ COLLECTION_ID_OR_NAME/RECORD_ID. You can also attach optional query and header p
 single topic using the options
 query parameter, e.g.:
 COLLECTION_ID_OR_NAME/RECORD_ID?options={"query": {"abc": "123"}, "headers": {"x-token": "..."}} Leave empty to unsubscribe from everything.
-## Content
 API Realtime The Realtime API is implemented via Server-Sent Events (SSE). Generally, it consists of 2 operations:
 -establish SSE connection
 -submit client subscriptions
@@ -4691,6 +4490,7 @@ multipart/form-data. Responses  `null`  {
 }   All of this is seamlessly handled by the SDKs using just the subscribe and
 unsubscribe methods:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 // (Optionally) authenticate
 // Subscribe to changes in any record in the collection
 pb.collection('example').subscribe('*', function (e) {
@@ -4706,6 +4506,7 @@ console.log(e.record);
 pb.collection('example').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
 pb.collection('example').unsubscribe('*'); // remove all '*' topic subscriptions
 pb.collection('example').unsubscribe(); // remove all subscriptions in the collection  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 // (Optionally) authenticate
 // Subscribe to changes in any record in the collection
 pb.collection('example').subscribe('*', (e) {
@@ -4744,8 +4545,6 @@ download(Boolean):If it is set to a truthy value (1, t, true) the file will be
 served with Content-Disposition: attachment header instructing the browser to
 ignore the file preview for pdf, images, videos, etc. and to directly download the file.
 # Web APIs reference - API Files
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **collectionIdOrName** (String): ID or name of the collection whose record model contains the file resource.
 - **recordId** (String): ID of the record model that contains the file resource.
 - **filename** (String): Name of the file resource.
@@ -4763,10 +4562,7 @@ an image (jpg, png, gif, webp), then the original file resource is returned unmo
 protected file(s).
 For an example, you can check
 "Files upload and handling".
-- **download** (Boolean): If it is set to a truthy value (1, t, true) the file will be
 served with Content-Disposition: attachment header instructing the browser to
-ignore the file preview for pdf, images, videos, etc. and to directly download the file.
-## Content
 API Files Files are uploaded, updated or deleted via the
 Records API.
 manipulations, like generating thumbs).
@@ -4817,8 +4613,6 @@ Ex.:
 ?fields=*,description:excerpt(200,true)
 jobId(String):The identifier of the cron job to run.
 # Web APIs reference - API Crons
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **fields** (String): Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
 ?fields=*,expand.relField.name * targets all keys from the specific depth level. In addition, the following field modifiers are also supported: :excerpt(maxLength, withEllipsis?)
@@ -4826,11 +4620,12 @@ Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
 - **jobId** (String): The identifier of the cron job to run.
-## Content
 API Crons    List cron jobs    Returns list with all registered app level cron jobs.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const jobs = await pb.crons.getFullList();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final jobs = await pb.crons.getFullList();   ###### API details
 GET /api/crons Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -4865,7 +4660,9 @@ Responses  [
 }      Run cron job    Triggers a single cron job by its id.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.crons.run('__pbLogsCleanup__');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.crons.run('__pbLogsCleanup__');   ###### API details
 POST /api/crons/`jobId` Requires `Authorization:TOKEN` Path parameters Param Type Description jobId String The identifier of the cron job to run. Responses  `null`  {
 "status": 401,
@@ -4958,8 +4755,6 @@ Required privateKey(String):PrivateKey is the private key associated to your app
 Required duration(Number):Duration specifies how long the generated JWT token should be considered valid.
 The specified value must be in seconds and max 15777000 (~6months).
 # Web APIs reference - API Settings
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **fields** (String): Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
 ?fields=*,expand.relField.name * targets all keys from the specific depth level. In addition, the following field modifiers are also supported: :excerpt(maxLength, withEllipsis?)
@@ -5029,19 +4824,19 @@ Ex.:
 password-reset or
 email-change.
 - **Required clientId** (String): The identifier of your app (aka. Service ID).
-- **Required teamId** (String): 10-character string associated with your developer account (usually could be found next to
 your name in the Apple Developer site).
 - **Required keyId** (String): 10-character key identifier generated for the "Sign in with Apple" private key associated
 with your developer account.
 - **Required privateKey** (String): PrivateKey is the private key associated to your app.
 - **Required duration** (Number): Duration specifies how long the generated JWT token should be considered valid.
 The specified value must be in seconds and max 15777000 (~6months).
-## Content
 API Settings    List settings    Returns a list with all available application settings.
 Secret/password fields are automatically redacted with ****** characters.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const settings = await pb.settings.getAll();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final settings = await pb.settings.getAll();   ###### API details
 GET /api/settings Requires `Authorization:TOKEN` Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -5124,13 +4919,17 @@ Responses  {
 }      Update settings    Bulk updates application settings and returns the updated settings list.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const settings = await pb.settings.update({
 meta: {
 appName: 'YOUR_APP',
+appUrl: 'http://127.0.0.1:8090',
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final settings = await pb.settings.update(body: {
 'meta': {
 'appName': 'YOUR_APP',
+'appUrl': 'http://127.0.0.1:8090',
 });   ###### API details
 PATCH /api/settings Requires `Authorization:TOKEN` Body Parameters Param Type Description  meta  Application meta data (name, url, support email, etc.). ├─ Required appName String The app name. ├─ Required appUrl String The app public absolute url. ├─ Optional hideControls Boolean Hides the collection create and update controls from the Dashboard.
 Useful to prevent making accidental schema changes when in production environment. ├─ Required senderName String Transactional mails sender name. ├─ Required senderAddress String Transactional mails sender address.  logs  App logger settings. └─ Optional maxDays Number Max retention period. Set to 0 for no logs. └─ Optional minLevel Number Specifies the minimum log persistent level.
@@ -5244,7 +5043,9 @@ Responses  {
 }      Test S3 storage connection    Performs S3 storage connection test.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.settings.testS3("backups");  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.settings.testS3("backups");   ###### API details
 POST /api/settings/test/s3 Requires `Authorization:TOKEN` Body Parameters Param Type Description Required filesystem String The storage filesystem to test (`storage` or `backups`). Body parameters could be sent as JSON or
 multipart/form-data. Responses  `null`  {
@@ -5257,6 +5058,8 @@ multipart/form-data. Responses  `null`  {
 }      Send test email    Sends a test user email.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090');
 POST /api/settings/test/email Requires `Authorization:TOKEN` Body Parameters Param Type Description Optional collection String The name or id of the auth collection. Fallbacks to _superusers if not set. Required email String The receiver of the test email. Required template String The test email template to send:  `verification`,
 `password-reset` or
 `email-change`. Body parameters could be sent as JSON or
@@ -5274,7 +5077,9 @@ multipart/form-data. Responses  `null`  {
 }      Generate Apple client secret    Generates a new Apple OAuth2 client secret key.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.settings.generateAppleClientSecret(clientId, teamId, keyId, privateKey, duration)  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.settings.generateAppleClientSecret(clientId, teamId, keyId, privateKey, duration)   ###### API details
 your name in the Apple Developer site). Required keyId String 10-character key identifier generated for the &quot;Sign in with Apple&quot; private key associated
 with your developer account. Required privateKey String PrivateKey is the private key associated to your app. Required duration Number Duration specifies how long the generated JWT token should be considered valid.
@@ -5339,9 +5144,7 @@ Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
 # Web APIs reference - API Logs
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `GET /api/collections/_pbc_2287844090/records?page=1&amp;perPage=1&amp;filter=&amp;fields=id"`
-## Parameters
+`GET /api/collections/_pbc_2287844090/records?page=1&amp;perPage=1&amp;filter=&amp;fields=id"`
 - **page** (Number): The page (aka. offset) of the paginated list (default to 1).
 - **perPage** (Number): The max returned logs per page (default to 30).
 - **sort** (String): Specify the ORDER BY fields. Add - / + (default) in front of the attribute for DESC /
@@ -5389,13 +5192,14 @@ wildcard match) To group and combine several expressions you can use parenthesis
 Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
-## Content
 API Logs    List logs    Returns a paginated logs list.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const pageResult = await pb.logs.getList(1, 20, {
 filter: 'data.status >= 400'
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final pageResult = await pb.logs.getList(
 page: 1,
 perPage: 20,
@@ -5496,7 +5300,9 @@ Responses  {
 }      View log    Returns a single log by its ID.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const log = await pb.logs.getOne('LOG_ID');  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final log = await pb.logs.getOne('LOG_ID');   ###### API details
 GET /api/logs/`id` Requires `Authorization:TOKEN` Path parameters Param Type Description id String ID of the log to view. Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -5537,9 +5343,11 @@ Responses  {
 }      Logs statistics    Returns hourly aggregated logs statistics.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const stats = await pb.logs.getStats({
 filter: 'data.status >= 400'
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final stats = await pb.logs.getStats(
 filter: 'data.status >= 400'
 );   ###### API details
@@ -5612,15 +5420,12 @@ Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
 # Web APIs reference - API Health
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **fields** (String): Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
 ?fields=*,expand.relField.name * targets all keys from the specific depth level. In addition, the following field modifiers are also supported: :excerpt(maxLength, withEllipsis?)
 Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
-## Content
 API Health    Health check    Returns the health status of the server.
 ###### API details
 GET/HEAD /api/health Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
@@ -5655,8 +5460,6 @@ key(String):The key of the backup file to download.
 token(String):Superuser file token for granting access to the
 backup file.
 # Web APIs reference - API Backups
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Parameters
 - **fields** (String): Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
 ?fields=*,expand.relField.name * targets all keys from the specific depth level. In addition, the following field modifiers are also supported: :excerpt(maxLength, withEllipsis?)
@@ -5664,19 +5467,18 @@ Returns a short plain text version of the field string value.
 Ex.:
 ?fields=*,description:excerpt(200,true)
 - **Optional name** (String): The base name of the backup file to create.
-Must be in the format [a-z0-9_-].zip
 If not set, it will be auto generated.
 - **Required file** (File): The zip archive to upload.
 - **key** (String): The key of the backup file to delete.
 - **key** (String): The key of the backup file to restore.
-- **key** (String): The key of the backup file to download.
 - **token** (String): Superuser file token for granting access to the
 backup file.
-## Content
 API Backups    List backups    Returns list with all available backup files.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const backups = await pb.backups.getFullList();  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 final backups = await pb.backups.getFullList();   ###### API details
 GET /api/backups Query parameters Param Type Description fields String Comma separated string of the fields to return in the JSON response
 (by default returns all fields). Ex.:
@@ -5708,6 +5510,8 @@ Responses  [
 This action will return an error if there is another backup/restore operation already in progress.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090');
 POST /api/backups Requires `Authorization:TOKEN` Body Parameters Param Type Description Optional name String The base name of the backup file to create.
 If not set, it will be auto generated. Body parameters could be sent as JSON or
 multipart/form-data. Responses  `null`  {
@@ -5725,7 +5529,9 @@ multipart/form-data. Responses  `null`  {
 }      Upload backup    Uploads an existing backup zip file.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.backups.upload({ file: new Blob([...]) });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.backups.upload(http.MultipartFile.fromBytes('file', ...));   ###### API details
 POST /api/backups/upload Requires `Authorization:TOKEN` Body Parameters Param Type Description Required file File The zip archive to upload. Uploading files is supported only via multipart/form-data. Responses  `null`  {
 "status": 400,
@@ -5747,6 +5553,8 @@ This action will return an error if the backup to delete is still being generate
 restore operation.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090');
 DELETE /api/backups/`key` Requires `Authorization:TOKEN` Path parameters Param Type Description key String The key of the backup file to delete. Responses  `null`  {
 "status": 400,
 "message": "Try again later - another backup/restore process has already been started.",
@@ -5763,6 +5571,8 @@ DELETE /api/backups/`key` Requires `Authorization:TOKEN` Path parameters Param T
 This action will return an error if there is another backup/restore operation already in progress.
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090');
 POST /api/backups/`key`/restore Requires `Authorization:TOKEN` Path parameters Param Type Description key String The key of the backup file to restore. Responses  `null`  {
 "status": 400,
 "message": "Try again later - another backup/restore process has already been started.",
@@ -5777,7 +5587,9 @@ POST /api/backups/`key`/restore Requires `Authorization:TOKEN` Path parameters P
 "data": {}
 Only superusers can perform this action.
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 const token = await pb.files.getToken();
+final pb = PocketBase('http://127.0.0.1:8090');
 final token = await pb.files.getToken();
 backup file. Responses  `[file resource]`  {
 "status": 400,
@@ -5790,8 +5602,6 @@ backup file. Responses  `[file resource]`  {
 
 ## 25.Extend with JavaScript - Overview
 # Extend with JavaScript - Overview
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Overview  ### JavaScript engine
 The prebuilt PocketBase v0.17+ executable comes with embedded ES5 JavaScript engine (goja) which enables you to write custom server-side code using plain JavaScript.
 You can start by creating *.pb.js file(s) inside a pb_hooks
@@ -5906,8 +5716,6 @@ set() helpers (this may change in the future).
 
 ## 26.Extend with Go - Overview
 # Extend with Go - Overview
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Overview  ### Getting started
 PocketBase can be used as regular Go package that exposes various helpers and hooks to help you implement
 your own custom portable application.
@@ -6020,9 +5828,7 @@ log.Fatal(err)
 ## 27.Extend with Go - Event hooks
 GET /hello"
 # Extend with Go - Event hooks
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `GET /hello"`
-## Content
+`GET /hello"`
 Event hooks The standard way to modify PocketBase is through
 event hooks in your Go code.
 All hooks have 3 main methods:
@@ -8123,9 +7929,7 @@ log.Fatal(err)
 ## 28.Extend with Go - Routing
 GET /hello/{name}"
 # Extend with Go - Routing
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `GET /hello/{name}"`
-## Content
+`GET /hello/{name}"`
 Routing PocketBase routing is built on top of the standard Go
 net/http.ServeMux.
 The router can be accessed via the app.OnServe() hook allowing you to register custom endpoints
@@ -8491,17 +8295,17 @@ functions.
 The official PocketBase SDKs expose the internal send() method that could be used to send requests
 to your custom route(s).
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.send("/hello", {
 // for other options check
 // https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
 query: { "abc": 123 },
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.send("/hello", query: { "abc": 123 })
 
 ## 29.Extend with Go - Database
 # Extend with Go - Database
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Database core.App
 is the main interface to interact with the database.
 App.DB() returns a dbx.Builder that can run all kinds of SQL statements, including
@@ -8772,8 +8576,6 @@ return nil
 
 ## 30.Extend with Go - Record operations
 # Extend with Go - Record operations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Record operations The most common task when using PocketBase as framework probably would be querying and working with your
 collection records.
 You could find detailed documentation about all the supported Record model methods in
@@ -9072,8 +8874,6 @@ Here is an example how to validate an auth token:
 
 ## 31.Extend with Go - Collection operations
 # Extend with Go - Collection operations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Collection operations Collections are usually managed via the Dashboard interface, but there are some situations where you may
 want to create or edit a collection programmatically (usually as part of a
 DB migration). You can find all available Collection related operations
@@ -9233,8 +9033,6 @@ return err
 
 ## 32.Extend with Go - Migrations
 # Extend with Go - Migrations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Migrations PocketBase comes with a builtin DB and data migration utility, allowing you to version your DB structure,
 create collections programmatically, initialize default settings, etc.
 Because the migrations are regular Go functions, besides applying schema changes, they could be used also
@@ -9328,7 +9126,6 @@ To avoid the clutter and to prevent applying the intermediate steps in productio
 squash) the unnecessary migration files manually and then update the local migrations history by running:
 `[root@dev app]$ go run . migrate history-sync`  The above command will remove any entry from the _migrations table that doesn&#39;t have a related
 migration file associated with it.
-### Examples
 // migrations/1687801090_set_pending_status.go
 package migrations
 import (
@@ -9420,8 +9217,6 @@ return app.Delete(collection)
 
 ## 33.Extend with Go - Jobs scheduling
 # Extend with Go - Jobs scheduling
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Jobs scheduling If you have tasks that need to be performed periodically, you could set up crontab-like jobs with the
 builtin app.Cron() (it returns an app scoped
 cron.Cron value)
@@ -9463,8 +9258,6 @@ application via cron.New().
 
 ## 34.Extend with Go - Sending emails
 # Extend with Go - Sending emails
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Sending emails PocketBase provides a simple abstraction for sending emails via the
 app.NewMailClient() factory.
 Depending on your configured mail settings (Dashboard &gt; Settings &gt; Mail settings) it will use the
@@ -9518,18 +9311,13 @@ if err := app.Start(); err != nil {
 log.Fatal(err)
 
 ## 35.Extend with Go - Rendering templates
-HTTP200:```json
+Response 200:
 {{template "placeholderName" .}}
-```
-HTTP200:```json
+Response 200:
 {{block "placeholderName" .}}default...{{end}}
-```
-HTTP200:```json
+Response 200:
 {{define "placeholderName"}}custom...{{end}}
-```
 # Extend with Go - Rendering templates
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Rendering templates  ### Overview
 A common task when creating custom routes or emails is the need of generating HTML output.
 There are plenty of Go template-engines available that you can use for this, but often for simple cases
@@ -9611,8 +9399,6 @@ log.Fatal(err)
 
 ## 36.Extend with Go - Console commands
 # Extend with Go - Console commands
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Console commands You can register custom console commands using
 app.RootCmd.AddCommand(cmd), where cmd is a
 cobra command.
@@ -9638,8 +9424,6 @@ processes are not shared with one another).
 
 ## 37.Extend with Go - Realtime messaging
 # Extend with Go - Realtime messaging
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Realtime messaging By default PocketBase sends realtime events only for Record create/update/delete operations (and for the OAuth2 auth redirect), but you are free to send custom realtime messages to the connected clients via the
 app.SubscriptionsBroker() instance.
 app.SubscriptionsBroker().Clients()
@@ -9677,16 +9461,16 @@ if err != nil {
 return err
 }  From the client-side, users can listen to the custom subscription topic by doing something like:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.realtime.subscribe('example', (e) => {
 console.log(e)
 })  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.realtime.subscribe('example', (e) {
 print(e)
 
 ## 38.Extend with Go - Filesystem
 # Extend with Go - Filesystem
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Filesystem PocketBase comes with a thin abstraction between the local filesystem and S3.
 To configure which one will be used you can adjust the storage settings from
 Dashboard &gt; Settings &gt; Files storage section.
@@ -9770,8 +9554,6 @@ return err
 
 ## 39.Extend with Go - Logging
 # Extend with Go - Logging
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Logging app.Logger() provides access to a standard slog.Logger implementation that
 writes any logs into the database so that they can be later explored from the PocketBase
 Dashboard &gt; Logs section.
@@ -9851,9 +9633,7 @@ fmt.Println(l.Data)
 ## 40.Extend with Go - Testing
 GET /my/hello
 # Extend with Go - Testing
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `GET /my/hello`
-## Content
+`GET /my/hello`
 Testing PocketBase exposes several test mocks and stubs (eg. tests.TestApp,
 tests.ApiScenario, tests.MockMultipartData, etc.) to help you write unit and
 integration tests for your app.
@@ -9956,8 +9736,6 @@ scenario.Test(t)
 
 ## 41.Extend with Go - Miscellaneous
 # Extend with Go - Miscellaneous
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Miscellaneous  ### app.Store()
 app.Store()
 returns a concurrent-safe application memory store that you can use to store anything for the duration of the
@@ -9997,8 +9775,6 @@ decrypted := security.Decrypt(encrypted, key) // []byte("test")
 
 ## 42.Extend with Go - Record proxy
 # Extend with Go - Record proxy
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Record proxy The available core.Record and its helpers
 are usually the recommended way to interact with your data, but in case you want a typed access to your record
 fields you can create a helper struct that embeds
@@ -10062,8 +9838,6 @@ article.SetProxyRecord(record)
 
 ## 43.Extend with JavaScript - Overview
 # Extend with JavaScript - Overview
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Overview  ### JavaScript engine
 The prebuilt PocketBase v0.17+ executable comes with embedded ES5 JavaScript engine (goja) which enables you to write custom server-side code using plain JavaScript.
 You can start by creating *.pb.js file(s) inside a pb_hooks
@@ -10178,8 +9952,6 @@ set() helpers (this may change in the future).
 
 ## 44.Extend with JavaScript - Event hooks
 # Extend with JavaScript - Event hooks
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Event hooks You can extend the default PocketBase behavior with custom server-side code using the exposed JavaScript
 app event hooks.
 All hook handler functions share the same function(e){} signature and expect the
@@ -11496,9 +11268,7 @@ onModelAfterDeleteError((e) => {
 ## 45.Extend with JavaScript - Routing
 GET /hello/{name}"
 # Extend with JavaScript - Routing
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-**API Endpoint:** `GET /hello/{name}"`
-## Content
+`GET /hello/{name}"`
 Routing You can register custom routes and middlewares by using the top-level
 routerAdd()
 and
@@ -11742,17 +11512,17 @@ return e.json(200, records)
 The official PocketBase SDKs expose the internal send() method that could be used to send requests
 to your custom route(s).
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.send("/hello", {
 // for other options check
 // https://developer.mozilla.org/en-US/docs/Web/API/fetch#options
 query: { "abc": 123 },
 });  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.send("/hello", query: { "abc": 123 })
 
 ## 46.Extend with JavaScript - Database
 # Extend with JavaScript - Database
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Database $app
 is the main interface to interact with your database.
 $app.db()
@@ -12019,8 +11789,6 @@ txApp.db().newQuery("DELETE FROM articles WHERE status = 'pending'").execute()
 
 ## 47.Extend with JavaScript - Record operations
 # Extend with JavaScript - Record operations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Record operations The most common task when extending PocketBase probably would be querying and working with your collection
 records.
 You could find detailed documentation about all the supported Record model methods in
@@ -12285,8 +12053,6 @@ Here is an example how to validate an auth token:
 
 ## 48.Extend with JavaScript - Collection operations
 # Extend with JavaScript - Collection operations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Collection operations Collections are usually managed via the Dashboard interface, but there are some situations where you may
 want to create or edit a collection programmatically (usually as part of a
 DB migration). You can find all available Collection related operations
@@ -12375,8 +12141,6 @@ $app.delete(collection)
 
 ## 49.Extend with JavaScript - Migrations
 # Extend with JavaScript - Migrations
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Migrations PocketBase comes with a builtin DB and data migration utility, allowing you to version your DB structure,
 create collections programmatically, initialize default settings and/or run anything that needs to be
 executed only once.
@@ -12427,7 +12191,6 @@ To avoid the clutter and to prevent applying the intermediate steps in productio
 squash) the unnecessary migration files manually and then update the local migrations history by running:
 `[root@dev app]$ ./pocketbase migrate history-sync`  The above command will remove any entry from the _migrations table that doesn&#39;t have a related
 migration file associated with it.
-### Examples
 // pb_migrations/1687801090_set_pending_status.js
 migrate((app) => {
 app.db().newQuery("UPDATE articles SET status = 'pending' WHERE status = ''").execute()
@@ -12491,8 +12254,6 @@ app.delete(collection)
 
 ## 50.Extend with JavaScript - Jobs scheduling
 # Extend with JavaScript - Jobs scheduling
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Jobs scheduling If you have tasks that need to be performed periodically, you could set up crontab-like jobs with
 cronAdd(id, expr, handler).
 Each scheduled job runs in its own goroutine as part of the serve command process and must have:
@@ -12512,8 +12273,6 @@ Dashboard > Settings > Crons section.
 
 ## 51.Extend with JavaScript - Sending emails
 # Extend with JavaScript - Sending emails
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Sending emails PocketBase provides a simple abstraction for sending emails via the
 $app.newMailClient() helper.
 Depending on your configured mail settings (Dashboard &gt; Settings &gt; Mail settings) it will use the
@@ -12544,18 +12303,13 @@ onMailerRecordPasswordResetSend((e) => {
 e.message.subject += (" " + e.record.get("name"))
 
 ## 52.Extend with JavaScript - Rendering templates
-HTTP200:```json
+Response 200:
 {{template "placeholderName" .}}
-```
-HTTP200:```json
+Response 200:
 {{block "placeholderName" .}}default...{{end}}
-```
-HTTP200:```json
+Response 200:
 {{define "placeholderName"}}custom...{{end}}
-```
 # Extend with JavaScript - Rendering templates
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Rendering templates  ### Overview
 A common task when creating custom routes or emails is the need of generating HTML output. To assist with
 this, PocketBase provides the global $template helper for parsing and rendering HTML templates.
@@ -12613,8 +12367,6 @@ return e.html(200, html)
 
 ## 53.Extend with JavaScript - Console commands
 # Extend with JavaScript - Console commands
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Console commands You can register custom console commands using
 app.rootCmd.addCommand(cmd), where cmd is a
 Command instance.
@@ -12630,8 +12382,6 @@ processes are not shared with one another).
 
 ## 54.Extend with JavaScript - Realtime messaging
 # Extend with JavaScript - Realtime messaging
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Realtime messaging By default PocketBase sends realtime events only for Record create/update/delete operations (and for the OAuth2 auth redirect), but you are free to send custom realtime messages to the connected clients via the
 $app.subscriptionsBroker() instance.
 $app.subscriptionsBroker().clients()
@@ -12655,16 +12405,16 @@ if (clients[clientId].hasSubscription("example")) {
 clients[clientId].send(message)
 }  From the client-side, users can listen to the custom subscription topic by doing something like:
 Dart  import PocketBase from 'pocketbase';
+const pb = new PocketBase('http://127.0.0.1:8090');
 await pb.realtime.subscribe('example', (e) => {
 console.log(e)
 })  import 'package:pocketbase/pocketbase.dart';
+final pb = PocketBase('http://127.0.0.1:8090');
 await pb.realtime.subscribe('example', (e) {
 print(e)
 
 ## 55.Extend with JavaScript - Filesystem
 # Extend with JavaScript - Filesystem
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Filesystem PocketBase comes with a thin abstraction between the local filesystem and S3.
 To configure which one will be used you can adjust the storage settings from
 Dashboard &gt; Settings &gt; Files storage section.
@@ -12732,8 +12482,6 @@ $app.save(record)
 
 ## 56.Extend with JavaScript - Logging
 # Extend with JavaScript - Logging
-Open Source backend in 1 file with realtime database, authentication, file storage and admin dashboard
-## Content
 Logging $app.logger() could be used to write any logs into the database so that they can be later
 explored from the PocketBase Dashboard &gt; Logs section.
 For better performance and to minimize blocking on hot paths, logs are written with debounce and

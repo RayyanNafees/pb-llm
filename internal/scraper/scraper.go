@@ -101,7 +101,6 @@ func New() *Scraper {
 }
 
 func (s *Scraper) ScrapeAll(extensions string) ([]types.DocSection, error) {
-	// Filter sections based on extensions parameter
 	filteredSections := s.filterSectionsByExtensions(docSections, extensions)
 
 	fmt.Printf("🚀 Starting PocketBase documentation scraping...\n")
@@ -131,7 +130,6 @@ func (s *Scraper) ScrapeAll(extensions string) ([]types.DocSection, error) {
 	return results, nil
 }
 
-// filterSectionsByExtensions filters sections based on the extensions parameter
 func (s *Scraper) filterSectionsByExtensions(sections []types.DocSection, extensions string) []types.DocSection {
 	if extensions == "both" {
 		return sections
@@ -140,7 +138,6 @@ func (s *Scraper) filterSectionsByExtensions(sections []types.DocSection, extens
 	var filtered []types.DocSection
 
 	for _, section := range sections {
-		// For "none", only include core sections (non-extension related)
 		if extensions == "none" {
 			if !s.isExtensionSection(section) {
 				filtered = append(filtered, section)
@@ -148,13 +145,11 @@ func (s *Scraper) filterSectionsByExtensions(sections []types.DocSection, extens
 			continue
 		}
 
-		// Always include core sections (non-extension related)
 		if !s.isExtensionSection(section) {
 			filtered = append(filtered, section)
 			continue
 		}
 
-		// Filter based on extension type
 		if extensions == "go" && s.isGoSection(section) {
 			filtered = append(filtered, section)
 		} else if extensions == "js" && s.isJavaScriptSection(section) {
@@ -165,25 +160,21 @@ func (s *Scraper) filterSectionsByExtensions(sections []types.DocSection, extens
 	return filtered
 }
 
-// isExtensionSection checks if a section is extension-related
 func (s *Scraper) isExtensionSection(section types.DocSection) bool {
 	return s.isGoSection(section) || s.isJavaScriptSection(section)
 }
 
-// isGoSection checks if a section is Go-related
 func (s *Scraper) isGoSection(section types.DocSection) bool {
 	return strings.HasPrefix(section.Title, "Go ") ||
 		strings.Contains(section.Title, "Extend with Go")
 }
 
-// isJavaScriptSection checks if a section is JavaScript-related
 func (s *Scraper) isJavaScriptSection(section types.DocSection) bool {
 	return strings.HasPrefix(section.Title, "JavaScript ") ||
 		strings.Contains(section.Title, "Extend with JavaScript") ||
 		section.Title == "JavaScript SDK"
 }
 
-// FilterDocsByExtensions filters already scraped documents by extension type (public method)
 func (s *Scraper) FilterDocsByExtensions(docs []types.DocSection, extensions string) []types.DocSection {
 	if extensions == "both" {
 		return docs
@@ -192,7 +183,6 @@ func (s *Scraper) FilterDocsByExtensions(docs []types.DocSection, extensions str
 	var filtered []types.DocSection
 
 	for _, doc := range docs {
-		// For "none", only include core sections (non-extension related)
 		if extensions == "none" {
 			if !s.isExtensionSection(types.DocSection{Title: doc.Title}) {
 				filtered = append(filtered, doc)
@@ -200,13 +190,11 @@ func (s *Scraper) FilterDocsByExtensions(docs []types.DocSection, extensions str
 			continue
 		}
 
-		// Always include core sections (non-extension related)
 		if !s.isExtensionSection(types.DocSection{Title: doc.Title}) {
 			filtered = append(filtered, doc)
 			continue
 		}
 
-		// Filter based on extension type
 		if extensions == "go" && s.isGoSection(types.DocSection{Title: doc.Title}) {
 			filtered = append(filtered, doc)
 		} else if extensions == "js" && s.isJavaScriptSection(types.DocSection{Title: doc.Title}) {
@@ -223,7 +211,6 @@ func (s *Scraper) processSection(section types.DocSection) (types.DocSection, er
 		return section, fmt.Errorf("failed to fetch page: %w", err)
 	}
 
-	// Check content type based on URL
 	if strings.Contains(section.URL, "raw.githubusercontent.com") {
 		if strings.HasSuffix(section.URL, "README.md") || strings.HasSuffix(section.URL, ".md") {
 			s.extractMarkdownContent(&section, content)
@@ -272,7 +259,7 @@ func (s *Scraper) fetchPageContentWithRetry(url string) (string, error) {
 
 		lastErr = fmt.Errorf("HTTP %d: %s (attempt %d)", resp.StatusCode, resp.Status, attempt)
 		if resp.StatusCode == 404 {
-			break // Don't retry 404s
+			break
 		}
 		time.Sleep(time.Duration(attempt) * time.Second)
 	}
@@ -281,10 +268,8 @@ func (s *Scraper) fetchPageContentWithRetry(url string) (string, error) {
 }
 
 func (s *Scraper) extractSourceCodeContent(doc *types.DocSection, content string) {
-	// For source code files, wrap content in code blocks
 	doc.Content = content
 
-	// Determine language from file extension
 	language := "text"
 	if strings.HasSuffix(doc.URL, ".go") {
 		language = "go"
@@ -296,31 +281,26 @@ func (s *Scraper) extractSourceCodeContent(doc *types.DocSection, content string
 		language = "python"
 	}
 
-	// Create clean content with proper code formatting
 	doc.CleanContent = fmt.Sprintf("```%s\n%s\n```", language, content)
 
-	// Extract description from comments at the top
 	lines := strings.Split(content, "\n")
 	var description strings.Builder
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "//") {
-			// Go-style comments
 			desc := strings.TrimSpace(strings.TrimPrefix(line, "//"))
 			if desc != "" {
 				description.WriteString(desc)
 				description.WriteString(" ")
 			}
 		} else if strings.HasPrefix(line, "#") && !strings.HasPrefix(line, "#!") {
-			// Python/shell-style comments (but not shebang)
 			desc := strings.TrimSpace(strings.TrimPrefix(line, "#"))
 			if desc != "" {
 				description.WriteString(desc)
 				description.WriteString(" ")
 			}
 		} else if strings.HasPrefix(line, "/*") {
-			// Multi-line comment start
 			desc := strings.TrimSpace(strings.TrimPrefix(line, "/*"))
 			desc = strings.TrimSuffix(desc, "*/")
 			if desc != "" {
@@ -328,7 +308,6 @@ func (s *Scraper) extractSourceCodeContent(doc *types.DocSection, content string
 				description.WriteString(" ")
 			}
 		} else if line != "" && !strings.HasPrefix(line, "package") && !strings.HasPrefix(line, "import") {
-			// Stop at first non-comment, non-package, non-import line
 			break
 		}
 
@@ -342,17 +321,15 @@ func (s *Scraper) extractSourceCodeContent(doc *types.DocSection, content string
 		doc.Description = doc.Description[:200] + "..."
 	}
 
-	// Extract function/type definitions as headers
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
+
 		if strings.HasPrefix(line, "func ") {
-			// Go functions
 			if idx := strings.Index(line, "("); idx > 5 {
 				funcName := strings.TrimSpace(line[5:idx])
 				doc.Headers = append(doc.Headers, fmt.Sprintf("Line %d: func %s", i+1, funcName))
 			}
 		} else if strings.HasPrefix(line, "type ") {
-			// Go types
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				doc.Headers = append(doc.Headers, fmt.Sprintf("Line %d: type %s", i+1, parts[1]))
@@ -360,16 +337,13 @@ func (s *Scraper) extractSourceCodeContent(doc *types.DocSection, content string
 		}
 	}
 
-	// Mark as successful
 	doc.Success = true
 }
 
 func (s *Scraper) extractMarkdownContent(doc *types.DocSection, content string) {
-	// For Markdown files, the content is already clean
 	doc.Content = content
 	doc.CleanContent = content
 
-	// Extract description from first paragraph after title
 	lines := strings.Split(content, "\n")
 	var description strings.Builder
 	titleFound := false
@@ -394,44 +368,24 @@ func (s *Scraper) extractMarkdownContent(doc *types.DocSection, content string) 
 		doc.Description = doc.Description[:200] + "..."
 	}
 
-	// Extract headers for navigation
 	doc.Headers = s.extractMarkdownHeaders(content)
 
-	// Mark as successful
 	doc.Success = true
 }
 
 func (s *Scraper) extractAllContent(doc *types.DocSection, content string) {
-	// Extract title - try multiple patterns
 	doc.Title = s.extractTitle(content, doc.Title)
-
-	// Extract main content
 	doc.Content = s.extractMainContent(content)
-
-	// Extract description
 	doc.Description = s.extractDescription(content)
-
-	// Extract API information
 	doc.APIRoute, doc.Method = s.extractAPIInfo(content)
-
-	// Extract parameters from tables
 	doc.Parameters = s.extractParameters(content)
-
-	// Extract code examples
 	doc.Examples = s.extractCodeExamples(content)
-
-	// Extract headers for navigation
 	doc.Headers = s.extractHeaders(content)
-
-	// Extract response examples
 	doc.ResponseExamples = s.extractResponseExamples(content)
-
-	// Create clean, formatted content
 	doc.CleanContent = s.createCleanContent(*doc)
 }
 
 func (s *Scraper) extractTitle(content, fallbackTitle string) string {
-	// Try to extract h1 title from the main content area
 	titlePatterns := []string{
 		`<h1[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</h1>`,
 		`<h1[^>]*>([^<]+)</h1>`,
@@ -453,10 +407,8 @@ func (s *Scraper) extractTitle(content, fallbackTitle string) string {
 }
 
 func (s *Scraper) extractMainContent(content string) string {
-	// Remove scripts, styles, and other non-content elements first
 	content = s.removeScriptsAndStyles(content)
 
-	// Remove navigation, sidebar, header, footer, and other UI elements
 	uiSelectors := []string{
 		`<nav[^>]*>.*?</nav>`,
 		`<header[^>]*>.*?</header>`,
@@ -470,7 +422,6 @@ func (s *Scraper) extractMainContent(content string) string {
 		content = regex.ReplaceAllString(content, "")
 	}
 
-	// Find the main content area
 	var mainContent string
 	contentPatterns := []string{
 		`<main[^>]*>(.*?)</main>`,
@@ -486,7 +437,6 @@ func (s *Scraper) extractMainContent(content string) string {
 		}
 	}
 
-	// If no main container found, use body content
 	if mainContent == "" {
 		bodyRegex := regexp.MustCompile(`(?s)<body[^>]*>(.*?)</body>`)
 		if matches := bodyRegex.FindStringSubmatch(content); len(matches) > 1 {
@@ -561,24 +511,21 @@ func (s *Scraper) extractAPIInfo(content string) (string, string) {
 func (s *Scraper) extractParameters(content string) []types.Parameter {
 	var parameters []types.Parameter
 
-	// Look for parameter tables with improved patterns
 	tablePattern := `(?s)<table[^>]*>.*?</table>`
 	tableRegex := regexp.MustCompile(tablePattern)
 	tables := tableRegex.FindAllString(content, -1)
 
 	for _, table := range tables {
-		// Check if this table contains parameters
 		if strings.Contains(strings.ToLower(table), "param") ||
 			strings.Contains(strings.ToLower(table), "field") ||
 			strings.Contains(strings.ToLower(table), "property") {
 
-			// Extract table rows
 			rowPattern := `(?s)<tr[^>]*>(.*?)</tr>`
 			rowRegex := regexp.MustCompile(rowPattern)
 			rows := rowRegex.FindAllStringSubmatch(table, -1)
 
 			for i, row := range rows {
-				if i == 0 { // Skip header row typically
+				if i == 0 {
 					continue
 				}
 				if len(row) > 1 {
@@ -591,7 +538,6 @@ func (s *Scraper) extractParameters(content string) []types.Parameter {
 						}
 						if len(cells) > 2 {
 							param.Description = s.cleanText(cells[2])
-							// Check if required is mentioned
 							desc := strings.ToLower(param.Description)
 							param.Required = strings.Contains(desc, "required") ||
 								strings.Contains(strings.ToLower(param.Type), "required")
@@ -620,7 +566,6 @@ func (s *Scraper) extractTableCells(rowContent string) []string {
 	var cells []string
 	for _, match := range matches {
 		if len(match) > 1 {
-			// Remove inner HTML tags and clean text
 			cellText := regexp.MustCompile(`<[^>]*>`).ReplaceAllString(match[1], "")
 			cleaned := s.cleanText(cellText)
 			cells = append(cells, cleaned)
@@ -633,7 +578,6 @@ func (s *Scraper) extractTableCells(rowContent string) []string {
 func (s *Scraper) extractCodeExamples(content string) map[string]string {
 	examples := make(map[string]string)
 
-	// Extract code blocks with language specification
 	codePattern := `(?s)<pre[^>]*><code[^>]*(?:class="[^"]*language-([^"]*)"[^>]*)?>(.*?)</code></pre>`
 	codeRegex := regexp.MustCompile(codePattern)
 	matches := codeRegex.FindAllStringSubmatch(content, -1)
@@ -643,19 +587,17 @@ func (s *Scraper) extractCodeExamples(content string) map[string]string {
 			lang := match[1]
 			code := s.cleanCode(match[2])
 
-			// Detect language if not specified
 			if lang == "" || lang == "text" {
 				lang = s.detectLanguage(code)
 			}
 
-			if len(code) > 10 { // Only include substantial code blocks
+			if len(code) > 10 {
 				key := fmt.Sprintf("%s_example_%d", lang, i)
 				examples[key] = code
 			}
 		}
 	}
 
-	// Also look for simple pre blocks without code tags
 	simpleCodePattern := `(?s)<pre[^>]*>(.*?)</pre>`
 	simpleCodeRegex := regexp.MustCompile(simpleCodePattern)
 	simpleMatches := simpleCodeRegex.FindAllStringSubmatch(content, -1)
@@ -663,7 +605,7 @@ func (s *Scraper) extractCodeExamples(content string) map[string]string {
 	for _, match := range simpleMatches {
 		if len(match) > 1 && !strings.Contains(match[0], "<code") {
 			code := s.cleanCode(match[1])
-			if len(code) > 20 { // Only include substantial code blocks
+			if len(code) > 20 {
 				lang := s.detectLanguage(code)
 				key := fmt.Sprintf("%s_simple_%d", lang, len(examples))
 				examples[key] = code
@@ -703,7 +645,6 @@ func (s *Scraper) extractMarkdownHeaders(content string) []string {
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "#") {
-			// Remove markdown header syntax and clean up
 			header := strings.TrimSpace(strings.TrimLeft(line, "#"))
 			if header != "" {
 				headers = append(headers, header)
@@ -735,7 +676,6 @@ func (s *Scraper) extractHeaders(content string) []string {
 func (s *Scraper) extractResponseExamples(content string) []types.ResponseExample {
 	var examples []types.ResponseExample
 
-	// Look for JSON response examples in pre/code blocks
 	jsonPattern := `(?s)<(?:pre|code)[^>]*>(\{.*?\})</(?:pre|code)>`
 	jsonRegex := regexp.MustCompile(jsonPattern)
 	matches := jsonRegex.FindAllStringSubmatch(content, -1)
@@ -745,7 +685,7 @@ func (s *Scraper) extractResponseExamples(content string) []types.ResponseExampl
 			body := s.cleanCode(match[1])
 			if strings.Contains(body, "{") && len(body) > 20 {
 				example := types.ResponseExample{
-					StatusCode:  200, // Default
+					StatusCode:  200,
 					Description: "API Response",
 					Body:        body,
 				}
@@ -760,20 +700,16 @@ func (s *Scraper) extractResponseExamples(content string) []types.ResponseExampl
 func (s *Scraper) createCleanContent(section types.DocSection) string {
 	var buffer bytes.Buffer
 
-	// Start with title
 	buffer.WriteString(fmt.Sprintf("# %s\n\n", section.Title))
 
-	// Add description if available
 	if section.Description != "" {
 		buffer.WriteString(fmt.Sprintf("%s\n\n", section.Description))
 	}
 
-	// Add API endpoint info if available
 	if section.APIRoute != "" && section.Method != "" {
 		buffer.WriteString(fmt.Sprintf("**API Endpoint:** `%s %s`\n\n", section.Method, section.APIRoute))
 	}
 
-	// Add parameters section if available
 	if len(section.Parameters) > 0 {
 		buffer.WriteString("## Parameters\n\n")
 		for _, param := range section.Parameters {
@@ -786,14 +722,12 @@ func (s *Scraper) createCleanContent(section types.DocSection) string {
 		buffer.WriteString("\n")
 	}
 
-	// Add main content
 	if section.Content != "" {
 		buffer.WriteString("## Content\n\n")
 		buffer.WriteString(section.Content)
 		buffer.WriteString("\n\n")
 	}
 
-	// Add code examples if available
 	if len(section.Examples) > 0 {
 		buffer.WriteString("## Examples\n\n")
 		for key, example := range section.Examples {
@@ -806,7 +740,6 @@ func (s *Scraper) createCleanContent(section types.DocSection) string {
 }
 
 func (s *Scraper) cleanText(text string) string {
-	// Remove HTML entities - compact
 	replacements := map[string]string{
 		"&amp;":  "&",
 		"&lt;":   "<",
@@ -822,13 +755,11 @@ func (s *Scraper) cleanText(text string) string {
 		text = strings.ReplaceAll(text, old, new)
 	}
 
-	// Ultra-compact whitespace cleanup
 	text = strings.ReplaceAll(text, "\n\n", "\n")
 	text = strings.ReplaceAll(text, "\t", " ")
 	text = strings.ReplaceAll(text, "\r", "")
 	text = strings.ReplaceAll(text, "  ", " ")
 
-	// Single pass line cleaning
 	lines := strings.Split(text, "\n")
 	var cleaned []string
 	for _, line := range lines {
@@ -841,12 +772,9 @@ func (s *Scraper) cleanText(text string) string {
 	return strings.TrimSpace(strings.Join(cleaned, "\n"))
 }
 
-// htmlToCleanText converts HTML content to clean, readable text
 func (s *Scraper) htmlToCleanText(html string) string {
-	// Ultra-compact HTML processing for minimal tokens
 	content := html
 
-	// Convert headings - minimal format
 	headingPatterns := []struct {
 		pattern string
 		prefix  string
@@ -871,7 +799,6 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		})
 	}
 
-	// Convert paragraphs - no double newlines
 	pRegex := regexp.MustCompile(`(?s)<p[^>]*>(.*?)</p>`)
 	content = pRegex.ReplaceAllStringFunc(content, func(match string) string {
 		submatch := pRegex.FindStringSubmatch(match)
@@ -885,7 +812,6 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		return ""
 	})
 
-	// Convert list items - compact
 	liRegex := regexp.MustCompile(`(?s)<li[^>]*>(.*?)</li>`)
 	content = liRegex.ReplaceAllStringFunc(content, func(match string) string {
 		submatch := liRegex.FindStringSubmatch(match)
@@ -899,7 +825,6 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		return ""
 	})
 
-	// Convert code blocks - minimal format
 	codeBlockRegex := regexp.MustCompile(`(?s)<pre[^>]*><code[^>]*>(.*?)</code></pre>`)
 	content = codeBlockRegex.ReplaceAllStringFunc(content, func(match string) string {
 		submatch := codeBlockRegex.FindStringSubmatch(match)
@@ -914,7 +839,6 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		return ""
 	})
 
-	// Convert inline code - minimal
 	inlineCodeRegex := regexp.MustCompile(`<code[^>]*>(.*?)</code>`)
 	content = inlineCodeRegex.ReplaceAllStringFunc(content, func(match string) string {
 		submatch := inlineCodeRegex.FindStringSubmatch(match)
@@ -928,13 +852,10 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		return ""
 	})
 
-	// Skip blockquotes for token efficiency
 	content = regexp.MustCompile(`(?s)<blockquote[^>]*>.*?</blockquote>`).ReplaceAllString(content, "")
 
-	// Remove all remaining HTML tags
 	content = s.stripHTMLTags(content)
 
-	// Ultra-compact cleanup
 	lines := strings.Split(content, "\n")
 	var cleanLines []string
 
@@ -942,7 +863,6 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		line = strings.TrimSpace(line)
 		lower := strings.ToLower(line)
 
-		// Skip noise and very short lines
 		if s.shouldSkipLine(lower) || len(line) < 3 {
 			continue
 		}
@@ -952,10 +872,8 @@ func (s *Scraper) htmlToCleanText(html string) string {
 		}
 	}
 
-	// Join with single newlines only
 	finalText := strings.Join(cleanLines, "\n")
 
-	// Remove excessive newlines
 	finalText = regexp.MustCompile(`\n{2,}`).ReplaceAllString(finalText, "\n")
 
 	return strings.TrimSpace(finalText)
@@ -974,11 +892,6 @@ func (s *Scraper) shouldSkipLine(line string) bool {
 	skipPatterns := []string{
 		"download", "for linux", "for windows", "for macos",
 		"click here", "read more", "see more", "learn more",
-		"edit this page", "improve this page", "feedback",
-		"github releases", "changelog", "previous", "next",
-		"table of contents", "on this page", "jump to",
-		".zip", ".tar.gz", "mb zip", "mb tar",
-		"http://127.0.0.1", "localhost:", "example.com",
 		"lorem ipsum", "placeholder", "todo", "fixme",
 		"copy to clipboard", "view source", "raw",
 		"breadcrumb", "navigation", "sidebar", "footer",
@@ -990,12 +903,10 @@ func (s *Scraper) shouldSkipLine(line string) bool {
 		}
 	}
 
-	// Skip decorative lines and mostly punctuation
 	if regexp.MustCompile(`^[=\-_*#]{2,}$`).MatchString(line) {
 		return true
 	}
 
-	// Skip lines with too much punctuation (UI noise)
 	if len(line) > 0 {
 		nonPunctCount := 0
 		for _, r := range line {
@@ -1010,10 +921,8 @@ func (s *Scraper) shouldSkipLine(line string) bool {
 }
 
 func (s *Scraper) cleanCode(code string) string {
-	// Remove HTML tags from code
 	code = regexp.MustCompile(`<[^>]*>`).ReplaceAllString(code, "")
 
-	// Clean HTML entities
 	code = strings.ReplaceAll(code, "&amp;", "&")
 	code = strings.ReplaceAll(code, "&lt;", "<")
 	code = strings.ReplaceAll(code, "&gt;", ">")
@@ -1032,14 +941,22 @@ func (s *Scraper) cleanCode(code string) string {
 }
 
 func (s *Scraper) SaveToFile(docs []types.DocSection, sessionDir, filename, format string) error {
-	// Ensure session directory exists
 	if err := s.ensureSessionDir(sessionDir); err != nil {
 		return err
 	}
 
 	filepath := fmt.Sprintf("docs/%s/%s", sessionDir, filename)
 	formatter := formatter.GetFormatter(format)
-	data, err := formatter.FormatFull(docs)
+
+	var data []byte
+	var err error
+
+	if format == "txt" {
+		data, err = formatter.FormatText(docs)
+	} else {
+		data, err = formatter.FormatCompact(docs)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error formatting data: %w", err)
 	}
@@ -1048,7 +965,6 @@ func (s *Scraper) SaveToFile(docs []types.DocSection, sessionDir, filename, form
 }
 
 func (s *Scraper) SaveSummaryToFile(docs []types.DocSection, sessionDir, filename string) error {
-	// Ensure session directory exists
 	if err := s.ensureSessionDir(sessionDir); err != nil {
 		return err
 	}

@@ -6,7 +6,6 @@ import (
 	"unicode"
 )
 
-// DocSection represents the structure of our extracted documentation
 type DocSection struct {
 	Title            string            `json:"title"`
 	URL              string            `json:"url"`
@@ -24,7 +23,6 @@ type DocSection struct {
 	Error            string            `json:"error,omitempty"`
 }
 
-// Parameter represents an API parameter
 type Parameter struct {
 	Name        string      `json:"name"`
 	Type        string      `json:"type"`
@@ -33,14 +31,12 @@ type Parameter struct {
 	Default     interface{} `json:"default,omitempty"`
 }
 
-// ResponseExample represents an API response example
 type ResponseExample struct {
 	StatusCode  int    `json:"status_code"`
 	Description string `json:"description"`
 	Body        string `json:"body"`
 }
 
-// SimplifiedDoc represents a simplified version of DocSection for analysis
 type SimplifiedDoc struct {
 	Title        string            `json:"title"`
 	URL          string            `json:"url"`
@@ -56,69 +52,6 @@ type SimplifiedDoc struct {
 // TokenEstimator provides rough token counting for LLM usage
 type TokenEstimator struct {
 	wordRegex *regexp.Regexp
-}
-
-// NewTokenEstimator creates a new token estimator
-func NewTokenEstimator() *TokenEstimator {
-	return &TokenEstimator{
-		wordRegex: regexp.MustCompile(`\w+`),
-	}
-}
-
-// EstimateTokens provides a rough estimation of tokens in text
-// Uses approximation: ~0.75 tokens per word for English text
-func (te *TokenEstimator) EstimateTokens(text string) int {
-	if text == "" {
-		return 0
-	}
-
-	// Count words using regex
-	words := te.wordRegex.FindAllString(text, -1)
-	wordCount := len(words)
-
-	// Count punctuation and special characters
-	punctCount := 0
-	for _, r := range text {
-		if unicode.IsPunct(r) || unicode.IsSymbol(r) {
-			punctCount++
-		}
-	}
-
-	// Rough estimation: 0.75 tokens per word + 0.5 tokens per punctuation
-	tokenEstimate := int(float64(wordCount)*0.75 + float64(punctCount)*0.5)
-
-	// Minimum of 1 token for non-empty text
-	if tokenEstimate == 0 && len(strings.TrimSpace(text)) > 0 {
-		tokenEstimate = 1
-	}
-
-	return tokenEstimate
-}
-
-// EstimateDocTokens calculates token estimates for a document section
-func (te *TokenEstimator) EstimateDocTokens(doc DocSection) DocTokenStats {
-	stats := DocTokenStats{
-		Title:        te.EstimateTokens(doc.Title),
-		Description:  te.EstimateTokens(doc.Description),
-		Content:      te.EstimateTokens(doc.Content),
-		CleanContent: te.EstimateTokens(doc.CleanContent),
-	}
-
-	// Count parameter tokens
-	for _, param := range doc.Parameters {
-		stats.Parameters += te.EstimateTokens(param.Name + " " + param.Type + " " + param.Description)
-	}
-
-	// Count example tokens
-	for _, example := range doc.Examples {
-		stats.Examples += te.EstimateTokens(example)
-	}
-
-	// Calculate totals
-	stats.Total = stats.Title + stats.Description + stats.Content + stats.Parameters + stats.Examples
-	stats.LLMUsable = stats.Title + stats.Description + stats.CleanContent + stats.Parameters + stats.Examples
-
-	return stats
 }
 
 // DocTokenStats holds token statistics for a document section
@@ -158,4 +91,56 @@ type SectionStat struct {
 	Title  string `json:"title"`
 	Tokens int    `json:"tokens"`
 	Size   int    `json:"size_chars"`
+}
+
+func NewTokenEstimator() *TokenEstimator {
+	return &TokenEstimator{
+		wordRegex: regexp.MustCompile(`\w+`),
+	}
+}
+
+func (te *TokenEstimator) EstimateTokens(text string) int {
+	if text == "" {
+		return 0
+	}
+
+	words := te.wordRegex.FindAllString(text, -1)
+	wordCount := len(words)
+
+	punctCount := 0
+	for _, r := range text {
+		if unicode.IsPunct(r) || unicode.IsSymbol(r) {
+			punctCount++
+		}
+	}
+
+	tokenEstimate := int(float64(wordCount)*0.75 + float64(punctCount)*0.5)
+
+	if tokenEstimate == 0 && len(strings.TrimSpace(text)) > 0 {
+		tokenEstimate = 1
+	}
+
+	return tokenEstimate
+}
+
+func (te *TokenEstimator) EstimateDocTokens(doc DocSection) DocTokenStats {
+	stats := DocTokenStats{
+		Title:        te.EstimateTokens(doc.Title),
+		Description:  te.EstimateTokens(doc.Description),
+		Content:      te.EstimateTokens(doc.Content),
+		CleanContent: te.EstimateTokens(doc.CleanContent),
+	}
+
+	for _, param := range doc.Parameters {
+		stats.Parameters += te.EstimateTokens(param.Name + " " + param.Type + " " + param.Description)
+	}
+
+	for _, example := range doc.Examples {
+		stats.Examples += te.EstimateTokens(example)
+	}
+
+	stats.Total = stats.Title + stats.Description + stats.Content + stats.Parameters + stats.Examples
+	stats.LLMUsable = stats.Title + stats.Description + stats.CleanContent + stats.Parameters + stats.Examples
+
+	return stats
 }

@@ -27,18 +27,16 @@ func runScraper() {
 	fmt.Println("🚀 PocketBase Documentation Scraper for LLMs")
 	fmt.Println("===========================================")
 	fmt.Println("📦 Generating 4 variations: Full, Go-only, JS-only, Core-only")
-	fmt.Println("📦 Each in 2 formats: LLM (ultra-compact) and TXT")
+	fmt.Println("📦 Each in 2 formats: MD (ultra-compact) and TXT")
 
 	s := scraper.New()
 
-	// First, scrape ALL sections once
 	fmt.Println("📥 Scraping all sections once (smart optimization)...")
 	allDocs, err := s.ScrapeAll("both")
 	if err != nil {
 		log.Fatalf("❌ Scraping failed: %v", err)
 	}
 
-	// Define all variations to generate from the scraped data
 	variations := []struct {
 		name      string
 		extension string
@@ -50,7 +48,6 @@ func runScraper() {
 		{"core", "none", "Core PocketBase without extensions"},
 	}
 
-	// Generate timestamp for session directory
 	timestamp := time.Now().Format("2006-01-02_15-04-05.000")
 	sessionDir := fmt.Sprintf("session_%s", timestamp)
 
@@ -59,13 +56,11 @@ func runScraper() {
 	for _, variation := range variations {
 		fmt.Printf("🎯 Processing %s variation (%s)...\n", variation.name, variation.desc)
 
-		// Filter the already scraped docs instead of scraping again
 		filteredDocs := s.FilterDocsByExtensions(allDocs, variation.extension)
 		fmt.Printf("   📊 %d sections included\n", len(filteredDocs))
 
-		// Generate LLM and TXT formats for each variation
-		formats := []string{"llm", "txt"}
-		fileExtensions := []string{".llm.md", ".txt"}
+		formats := []string{"md", "txt"}
+		fileExtensions := []string{".md", ".txt"}
 
 		for i, format := range formats {
 			outputFile := fmt.Sprintf("pocketbase_docs_%s%s", variation.name, fileExtensions[i])
@@ -76,7 +71,6 @@ func runScraper() {
 			}
 		}
 
-		// Generate summary for this variation
 		summaryFile := fmt.Sprintf("summary_%s.txt", variation.name)
 		if err := s.SaveSummaryToFile(filteredDocs, sessionDir, summaryFile); err != nil {
 			log.Printf("⚠️ Failed to save %s summary: %v", variation.name, err)
@@ -90,13 +84,13 @@ func runScraper() {
 	fmt.Printf("🎉 All variations generated successfully!\n")
 	fmt.Printf("📁 Session directory: docs/%s/\n\n", sessionDir)
 	fmt.Printf("📄 Available files:\n")
-	fmt.Printf("   • pocketbase_docs_full.llm.md/.txt - Complete documentation (ultra-compact)\n")
-	fmt.Printf("   • pocketbase_docs_go.llm.md/.txt - Go extensions only (ultra-compact)\n")
-	fmt.Printf("   • pocketbase_docs_js.llm.md/.txt - JavaScript extensions only (ultra-compact)\n")
-	fmt.Printf("   • pocketbase_docs_core.llm.md/.txt - Core PocketBase only (ultra-compact)\n")
+	fmt.Printf("   • pocketbase_docs_full.md/.txt - Complete documentation (ultra-compact)\n")
+	fmt.Printf("   • pocketbase_docs_go.md/.txt - Go extensions only (ultra-compact)\n")
+	fmt.Printf("   • pocketbase_docs_js.md/.txt - JavaScript extensions only (ultra-compact)\n")
+	fmt.Printf("   • pocketbase_docs_core.md/.txt - Core PocketBase only (ultra-compact)\n")
 	fmt.Printf("   • summary_*.txt - Individual statistics for each variation\n\n")
 	fmt.Printf("🤖 Pick the variation that matches your needs!\n")
-	fmt.Printf("💡 .llm.md format is now ultra-compact for maximum token efficiency!\n")
+	fmt.Printf("💡 .md format is now ultra-compact for maximum token efficiency!\n")
 }
 
 func printHelp() {
@@ -110,7 +104,7 @@ func printHelp() {
 	  • JS-only - JavaScript extensions only (frontend development)
 	  • Core-only - Core PocketBase without any extensions
 
-	  Each variation is generated in ultra-compact LLM-optimized and plain text formats.
+	  Each variation is generated in ultra-compact markdown and plain text formats.
 
 	USAGE:
 	  go run cmd/main.go [OPTIONS]
@@ -120,7 +114,7 @@ func printHelp() {
 	        Show this help message
 
 	OUTPUT FORMATS:
-	  • .llm.md - Ultra-compact LLM format for maximum token efficiency
+	  • .md - Ultra-compact markdown format optimized for LLM token efficiency
 	  • .txt - Plain text format for general use
 
 	FEATURES:
